@@ -19,6 +19,7 @@ def Galaxies(halos, p_hod, seed=None):
     p_hod : dict
         dictionary specifying the HOD parameters 
     '''
+    # check halos 
     if 'alpha' not in p_hod.keys(): 
         raise ValueError
     if 'logMmin' not in p_hod.keys(): 
@@ -35,8 +36,8 @@ def Galaxies(halos, p_hod, seed=None):
     hod = HODCatalog(halocat, seed=seed, **params)
     
     hod.save('%s/HOD'%(folder), ('Position', 'Velocity'))
+    return None 
    
-
 
 def Halos(): 
     '''
