@@ -62,7 +62,21 @@ def Galaxies(halos, p_hod, seed=None):
     
     hod.save('%s/HOD'%(folder), ('Position', 'Velocity', 'RSDPosition'))
     return None 
-   
+
+
+def RSDHalos(halos, LOS=[0,0,1]): 
+    ''' Given halo catalog, return redshift space distorted halo catalog
+
+    parameters
+    ----------
+    halos : 
+
+    LOS : list, 3 elements
+        list that specifies the line of sight 
+    '''
+    halo['RSDPosition'] = halo['Position'] + halo['VelocityOffset'] * LOS
+    return halo 
+
 
 def Halos(bs, nc, seed, nstep, seed_hod, Omega_m, p_alpha, p_logMin, p_logM1, p_logM0, p_sigma_logM):
     '''
