@@ -100,3 +100,5 @@ def Halos(bs, nc, seed, nstep, seed_hod, Omega_m, p_alpha, p_logMin, p_logM1, p_
     fof = FOF(cat, linking_length=0.2, nmin=12)
     fofcat = fof.to_halos(particle_mass=cat.attrs['M0'], cosmo = cosmo, redshift = 0.0)      
     return fofcat  
+
+
