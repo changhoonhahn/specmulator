@@ -42,6 +42,11 @@ def NeutParticles(mneut, nreal, nzbin):
     #particle_data['ID'] = RS.read_block(f, 'ID  ', parttype=1)
 
     # create the catalogue
+
+    # WHY DOES THIS NOT WORK?!?!
+    # WHY DOES THIS NOT WORK?!?!
+    # WHY DOES THIS NOT WORK?!?!
+    # WHY DOES THIS NOT WORK?!?!
     cat = NBlab.ArrayCatalog({'Position' : pos}, BoxSize=header['boxsize']) 
     #cat['KDDensity'] = KDDensity(cat).density
     #cat.save('%s/Matter'%(dir), ('Position', 'Velocity'))
