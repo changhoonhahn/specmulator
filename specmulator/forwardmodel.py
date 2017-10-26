@@ -9,13 +9,15 @@ from pmesh.pm import ParticleMesh
 from scipy.interpolate import InterpolatedUnivariateSpline as interpolate
 
 
-def Observables(gals, observable='plk'): 
-    ''' Given galaxy catalog, measure specified observables 
+def Observables(cat, observable='plk', rsd=False): 
+    ''' Given galaxy/halo catalog, measure specified observables 
     (e.g. powerspectrum multipoles). 
     '''
     if observable == 'plk': # powerspectrum multipole 
         # things are hardcoded below **for now**
-        mesh = gals.to_mesh(window='tsc', Nmesh=256, compensated=True, position='RSDPosition')
+        if rsd: str_pos = 'RSDPosition'
+        else: str_pos = 'Position'
+        mesh = cat.to_mesh(window='tsc', Nmesh=256, compensated=True, position=str_pos)
         r = NBlab.FFTPower(mesh, mode='2d', dk=0.005, kmin=0.01, Nmu=5, los=[0,0,1], poles=[0,2,4])
 
         # think about the output some more! 
@@ -114,5 +116,3 @@ def Halos(bs, nc, seed, nstep, seed_hod, Omega_m, p_alpha, p_logMin, p_logM1, p_
     fof = FOF(cat, linking_length=0.2, nmin=12)
     fofcat = fof.to_halos(particle_mass=cat.attrs['M0'], cosmo = cosmo, redshift = 0.0)      
     return fofcat  
-
-

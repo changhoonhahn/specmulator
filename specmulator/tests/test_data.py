@@ -24,4 +24,5 @@ def runNeutHalos():
 
 
 if __name__=="__main__": 
+    #runNeutParticles()
     runNeutHalos()

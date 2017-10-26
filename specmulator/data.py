@@ -20,7 +20,7 @@ def NeutHalos(mneut, nreal, nzbin, clobber=False):
     
     # get cosmology from header 
     Omega_b = 0.049 # fixed baryon 
-    cosmo = NBlab.cosmology.Planck15.clone(Omega_cdm=header['Omega_DM'], h=header['h'], Omega_b=Omega_b)
+    cosmo = NBlab.cosmology.Planck15.clone(Omega_cdm=header['Omega_m']-Omega_b, h=header['h'], Omega_b=Omega_b)
     
     if (not os.path.isdir(dir+'/FOF')) or clobber: 
         # DM particle mass (parttype=1)
@@ -28,12 +28,11 @@ def NeutHalos(mneut, nreal, nzbin, clobber=False):
 
         cat = NeutParticles(mneut, nreal, nzbin) # read in neutrino particles with 
         cat.attrs['Nmesh'] = [512, 512, 512]
-        # calculate friend-of-friend
+        # calculate friend-of-friend with only CDM particles 
         fof = NBlab.FOF(cat, linking_length=0.2, nmin=20)
-        print fof._linking_length
         # now make them into halos  
         fofcat = fof.to_halos(particle_mass=m_part, cosmo=cosmo, redshift=header['z'])      
-        fofcat.save(dir+'/FOF', ('Position', 'Velocity', 'Mass', 'Radius'))
+        fofcat.save(dir+'/FOF', ['Position', 'Velocity', 'Mass', 'Radius'])
     else: 
         fofcat = NBlab.BigFileCatalog(dir+'/FOF', header='Header') 
     return fofcat 
@@ -70,7 +69,7 @@ def NeutParticles(mneut, nreal, nzbin, clobber=False):
 
         # read in CDM particles (parttype = 1) and create catalogue
         particle_data = {} 
-        particle_data['Position'] = RS.read_block(f, 'POS ', parttype=1)
+        particle_data['Position'] = RS.read_block(f, 'POS ', parttype=1)/1000. # Mpc/h
         particle_data['Velocity'] = RS.read_block(f, 'VEL ', parttype=1)
         particle_data['ID'] = RS.read_block(f, 'ID  ', parttype=1)
         cat = NBlab.ArrayCatalog(particle_data, BoxSize=np.array([header['boxsize'], header['boxsize'], header['boxsize']])) 
