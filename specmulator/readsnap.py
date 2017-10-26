@@ -36,7 +36,7 @@ class snapshot_header:
     elif os.path.exists(filename+".0"):
       curfilename = filename+".0"
     else:
-      print "file not found:", filename
+      print("file not found:", filename)
       sys.exit()
       
     self.filename = filename  
@@ -57,7 +57,7 @@ class snapshot_header:
         swap = 1
         format = 1
       else:
-        print "incorrect file format encountered when reading header of", filename
+        print("incorrect file format encountered when reading header of", filename)
         sys.exit()
     
     self.format = format
@@ -101,7 +101,7 @@ class snapshot_header:
 
 def find_block(filename, format, swap, block, block_num, only_list_blocks=False):
     if (not os.path.exists(filename)):
-        print "file not found:", filename
+        print("file not found:", filename)
         sys.exit()
             
     f = open(filename,'rb')
@@ -128,9 +128,9 @@ def find_block(filename, format, swap, block, block_num, only_list_blocks=False)
     
         # - print some debug info about found data blocks -
         if format==2:
-            print curblock, curblock_num, curblocksize
+            print(curblock, curblock_num, curblocksize)
         else:
-            print curblock_num, curblocksize
+            print(curblock_num, curblocksize) 
     
         if only_list_blocks:
             if format==2:
@@ -180,11 +180,11 @@ def read_block(filename, block, parttype=-1, physical_velocities=True, no_masses
     blockadd=0
     if no_masses==True:
         if (verbose):	
-          print "No mass block present"    
+          print("No mass block present")
         blocksub=1
 		 
     if parttype not in [-1,0,1,2,3,4,5]:
-        print "wrong parttype given"
+        print("wrong parttype given")
         sys.exit()
   
     if os.path.exists(filename):
@@ -192,13 +192,13 @@ def read_block(filename, block, parttype=-1, physical_velocities=True, no_masses
     elif os.path.exists(filename+".0"):
         curfilename = filename+".0"
     else:
-        print "file not found:", filename
-        print "and:", curfilename
+        print("file not found:", filename)
+        print("and:", curfilename)
         sys.exit()
   
     head = snapshot_header(curfilename)
     format = head.format
-    print "FORMAT=", format
+    print("FORMAT=", format)
     swap    = head.swap
     npart   = head.npart
     massarr = head.massarr
@@ -230,7 +230,7 @@ def read_block(filename, block, parttype=-1, physical_velocities=True, no_masses
         block_num = 5
         if parttype>=0 and massarr[parttype]>0:   
             if (verbose):	
-                print "filling masses according to massarr"   
+                print("filling masses according to massarr")
             return np.ones(nall[parttype],dtype=dt)*massarr[parttype]
     elif block=="U   ":
         data_for_type[0] = True
@@ -278,7 +278,7 @@ def read_block(filename, block, parttype=-1, physical_velocities=True, no_masses
         data_for_type[5] = True
         block_num = 15+blockadd-blocksub
     else: 
-        print "Sorry! Block type", block, "not known!"
+        print("Sorry! Block type", block, "not known!")
         sys.exit()
     # - end of block description -
   
@@ -287,7 +287,7 @@ def read_block(filename, block, parttype=-1, physical_velocities=True, no_masses
         actual_data_for_type[:] = False
         actual_data_for_type[parttype] = True
         if data_for_type[parttype]==False:
-            print "Error: no data for specified particle type", parttype, "in the block", block   
+            print("Error: no data for specified particle type", parttype, "in the block", block)
             sys.exit()
     elif block=="MASS":
         actual_data_for_type[:] = True  
@@ -321,7 +321,7 @@ def read_block(filename, block, parttype=-1, physical_velocities=True, no_masses
         else: 
             actual_curpartnum = curpartnum
             add_offset = np.int32(0)
-        print curfilename, format, swap, block, block_num
+        print(curfilename, format, swap, block, block_num)
         offset,blocksize = find_block(curfilename,format,swap,block,block_num)
     
         if i==0: # fix data type for ID if long IDs are used
@@ -330,7 +330,7 @@ def read_block(filename, block, parttype=-1, physical_velocities=True, no_masses
                     dt = np.uint64 
         
         if np.dtype(dt).itemsize*curpartnum != blocksize:
-            print "something wrong with blocksize! expected =",np.dtype(dt).itemsize*curpartnum,"actual =",blocksize
+            print("something wrong with blocksize! expected =",np.dtype(dt).itemsize*curpartnum,"actual =",blocksize)
             sys.exit()
     
         f = open(curfilename,'rb')
@@ -369,7 +369,7 @@ def list_format2_blocks(filename):
   elif os.path.exists(filename+".0"):
     curfilename = filename+".0"
   else:
-    print "file not found:", filename
+    print("file not found:", filename)
     sys.exit()
   
   head = snapshot_header(curfilename)
@@ -377,16 +377,16 @@ def list_format2_blocks(filename):
   swap = head.swap
   del head
   
-  print 'GADGET FORMAT ',format
+  print('GADGET FORMAT ',format)
   if (format != 2):
-    print "#   OFFSET   SIZE"
+    print("#   OFFSET   SIZE")
   else:            
-    print "#   BLOCK   OFFSET   SIZE"
-  print "-------------------------"
+    print("#   BLOCK   OFFSET   SIZE")
+  print("-------------------------")
   
   find_block(curfilename, format, swap, "XXXX", 0, only_list_blocks=True)
   
-  print "-------------------------"
+  print("-------------------------")
 
 def read_gadget_header(filename):
     ''' Given snapshot file name  return dictionary with gadget header 
@@ -396,7 +396,7 @@ def read_gadget_header(filename):
     elif os.path.exists(filename+".0"):
         curfilename = filename+".0"
     else:
-        print "file not found:", filename
+        print("file not found:", filename)
         sys.exit()
 
     head = snapshot_header(curfilename)

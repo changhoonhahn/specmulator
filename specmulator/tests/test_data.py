@@ -15,11 +15,10 @@ def runNeutParticles(nreal):
     return None 
 
 
-def runNeutHalos():
+def runNeutHalos(nreal):
     ''' Test that the method NeutrinoHalos works properly 
     '''
-    halocat = Data.NeutHalos(0.0, 1, 4, clobber=True)  # mneut = 0.0eV, realization #1, z = 0 
-    print type(halocat) 
+    halocat = Data.NeutHalos(0.0, nreal, 4, clobber=True)  # mneut = 0.0eV, realization #1, z = 0 
     return None 
 
 
