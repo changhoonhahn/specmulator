@@ -32,7 +32,7 @@ def NeutHalos(mneut, nreal, nzbin, clobber=False):
         fof = NBlab.FOF(cat, linking_length=0.2, nmin=20)
         # now make them into halos  
         fofcat = fof.to_halos(particle_mass=m_part, cosmo=cosmo, redshift=header['z'])      
-        fofcat.save(dir+'/FOF', ['Position', 'Velocity', 'Mass', 'Radius'])
+        fofcat.save(dir+'/FOF', ['Position', 'Velocity', 'VelocityOffset', 'Mass', 'Radius'])
     else: 
         fofcat = NBlab.BigFileCatalog(dir+'/FOF', header='Header') 
     return fofcat 
