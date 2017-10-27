@@ -9,7 +9,7 @@ from pmesh.pm import ParticleMesh
 from scipy.interpolate import InterpolatedUnivariateSpline as interpolate
 
 
-def Observables(cat, observable='plk', rsd=False): 
+def Observables(cat, observable='plk', rsd=False, Nmesh=256): 
     ''' Given galaxy/halo catalog, measure specified observables 
     (e.g. powerspectrum multipoles). 
     '''
@@ -17,8 +17,8 @@ def Observables(cat, observable='plk', rsd=False):
         # things are hardcoded below **for now**
         if rsd: str_pos = 'RSDPosition'
         else: str_pos = 'Position'
-        mesh = cat.to_mesh(window='tsc', Nmesh=256, compensated=True, position=str_pos)
-        r = NBlab.FFTPower(mesh, mode='2d', dk=0.005, kmin=0.01, Nmu=5, los=[0,0,1], poles=[0,2,4])
+        mesh = cat.to_mesh(window='tsc', Nmesh=Nmesh, compensated=True, position=str_pos)
+        r = NBlab.FFTPower(mesh, mode='2d', dk=0.005, kmin=0.005, Nmu=5, los=[0,0,1], poles=[0,2,4])
 
         # think about the output some more! 
         poles = r.poles
@@ -26,8 +26,10 @@ def Observables(cat, observable='plk', rsd=False):
         for ell in [0, 2, 4]:
             P = poles['power_%d' %ell].real
             if ell == 0: P = P - poles.attrs['shotnoise'] # add shotnoise to monopole 
-            plk['p'+str(ell)+'k'] = P 
+            plk['p%dk' %ell] = P 
         return plk  
+    else: 
+        raise NotImplementedError
 
 
 def Galaxies(halos, p_hod, seed=None): 
@@ -66,18 +68,18 @@ def Galaxies(halos, p_hod, seed=None):
     return None 
 
 
-def RSDHalos(halos, LOS=[0,0,1]): 
-    ''' Given halo catalog, return redshift space distorted halo catalog
+def RSD(cat, LOS=[0,0,1]): 
+    ''' Given catalog, redshift space distorted positions 
+    along LOS 
 
     parameters
     ----------
-    halos : 
+    cat : CatalogBase 
 
     LOS : list, 3 elements
         list that specifies the line of sight 
     '''
-    halo['RSDPosition'] = halo['Position'] + halo['VelocityOffset'] * LOS
-    return halo 
+    return cat['Position'] + cat['VelocityOffset'] * LOS
 
 
 def Halos(bs, nc, seed, nstep, seed_hod, Omega_m, p_alpha, p_logMin, p_logM1, p_logM0, p_sigma_logM):

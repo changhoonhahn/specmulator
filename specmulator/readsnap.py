@@ -420,5 +420,5 @@ def read_gadget_header(filename):
     head_dict['Omega_DM'] = head.nall[1]*head.massarr[1]*1e10/(head.boxsize**3*rhocrit)
     if head.nall[2]>0 and head.massarr[2]>0:
         head_dict['Omega_NU'] = head.nall[2]*head.massarr[2]*1e10/(head.boxsize**3*rhocrit)
-        head_dict['sum_neutrino_masses'] = Omega_NU*head.hubble**2*94.1745
+        head_dict['sum_neutrino_masses'] = head_dict['Omega_NU']*head.hubble**2*94.1745
     return head_dict
