@@ -4,6 +4,7 @@ Code for the Latin Hypercube Design
 
 
 '''
+import os 
 import random
 import numpy as np 
 
@@ -15,42 +16,43 @@ import lhsmdu as lhsMDU
 
 
 def HOD_LHD(HODrange=None, samples=None, method=None):
-    ''' Generate latin hypercubes for vanilla Zheng et al.(2007) 
-    HOD model 
+    ''' Return latin hypercubes for vanilla Zheng et al.(2007) 
+    HOD model. 
 
     Sources
     -------
     - Zheng Z., et al. (2007) -- arXiv:0512071
     - Sinha M., et al. (2017) -- arXiv:1708.04892 
     '''
-    if HODrange is None:  
+    if HODrange is 'sinha2017prior':  
         range_descrip = "Sinha et al (2017) prior"
-        range_lbl = 'sinha2017prior'
         HOD_range_min = [11., 0.001, 6., 12., 0.001]
         HOD_range_max = [12.2, 1., 14., 14., 2.]
-
         theta_lbl = ['log $M_\mathrm{min}$', '$\sigma_{\mathrm{log}\,M}$', 'log $M_0$', 'log $M_1$', r'$\alpha$']
     else: 
         raise NotImplementedError
-    dim = len(HOD_range_min)
+    
+    fname = ''.join([UT.dat_dir(), 'lhd/HOD_LHD.', HODrange, '.', method, '.', str(samples), 'samples.dat']) 
+    
+    if os.path.isfile(fname): # file exists 
+        lhcube = np.loadtxt(fname, skiprows=4)
+    else: 
+        # Nsample x Ndim latin hypercube
+        lhcube = thetaLHD([HOD_range_min, HOD_range_max], samples=samples, method=method)
 
-    # Nsample x Ndim latin hypercube
-    lhcube = thetaLHD([HOD_range_min, HOD_range_max], samples=samples, method=method)
+        f = open(fname, 'w') 
+        f.write('# '+range_descrip+'\n') 
+        f.write('# parameters : '+', '.join(theta_lbl)+'\n') 
+        f.write('# theta min : '+', '.join([str(r) for r in HOD_range_min])+'\n') 
+        f.write('# theta max : '+', '.join([str(r) for r in HOD_range_max])+'\n') 
 
-    fname = ''.join([UT.dat_dir(), 'lhd/HOD_LHD.', range_lbl, '.', method, '.', str(dim), 'dim.', str(samples), 'samples.dat']) 
-    f = open(fname, 'w') 
-    f.write('# '+range_descrip+'\n') 
-    f.write('# parameters : '+', '.join(theta_lbl)+'\n') 
-    f.write('# theta min : '+', '.join([str(r) for r in HOD_range_min])+'\n') 
-    f.write('# theta max : '+', '.join([str(r) for r in HOD_range_max])+'\n') 
-
-    for i in range(lhcube.shape[0]): 
-        f.write('%f' % (lhcube[i,0]))
-        for j in range(1, lhcube.shape[1]):
-            f.write('\t %f' % (lhcube[i,j]))
-        f.write('\n')
-    f.close() 
-    return None 
+        for i in range(lhcube.shape[0]): 
+            f.write('%f' % (lhcube[i,0]))
+            for j in range(1, lhcube.shape[1]):
+                f.write('\t %f' % (lhcube[i,j]))
+            f.write('\n')
+        f.close() 
+    return lhcube 
     
 
 def thetaLHD(theta_range, samples=None, method=None):  

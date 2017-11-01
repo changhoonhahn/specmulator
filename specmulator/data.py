@@ -28,7 +28,10 @@ def NeutHalos(mneut, nreal, nzbin):
         nzbin = 3 --> z=0.5
         nzbin = 4 --> z=0
     '''
-    dir = ''.join([UT.dat_dir(), str(mneut), 'eV/', str(nreal)])
+    if mneut == 0.1: 
+        dir = ''.join([UT.dat_dir(), '0.10eV/', str(nreal)])
+    else: 
+        dir = ''.join([UT.dat_dir(), str(mneut), 'eV/', str(nreal)])
     # read in Gadget header
     header = RS.read_gadget_header(''.join([dir, '/snapdir_', str(nzbin).zfill(3), '/snap_', str(nzbin).zfill(3)]))
     
@@ -49,6 +52,7 @@ def NeutHalos(mneut, nreal, nzbin):
     
     # save to ArryCatalog for consistency
     cat = NBlab.ArrayCatalog(group_data, BoxSize=np.array([1000., 1000., 1000.])) 
+    cat = NBlab.HaloCatalog(cat, cosmo=cosmo, redshift=header['z'], mdef='vir') 
     return cat
 
 

@@ -19,14 +19,14 @@ def Observables(cat, observable='plk', rsd=False, Nmesh=256):
         else: str_pos = 'Position'
         mesh = cat.to_mesh(window='tsc', Nmesh=Nmesh, compensated=True, position=str_pos)
         r = NBlab.FFTPower(mesh, mode='2d', dk=0.005, kmin=0.005, Nmu=5, los=[0,0,1], poles=[0,2,4])
-
-        # think about the output some more! 
         poles = r.poles
         plk = {'k': poles['k']} 
         for ell in [0, 2, 4]:
             P = poles['power_%d' %ell].real
-            if ell == 0: P = P - poles.attrs['shotnoise'] # add shotnoise to monopole 
+            if ell == 0: 
+                P = P - poles.attrs['shotnoise'] # subtract shotnoise from monopole 
             plk['p%dk' %ell] = P 
+        plk['shotnoise'] = poles.attrs['shotnoise'] # save shot noise term
         return plk  
     else: 
         raise NotImplementedError
@@ -55,17 +55,11 @@ def Galaxies(halos, p_hod, seed=None):
         raise ValueError
     if 'sigma_logM' not in p_hod.keys(): 
         raise ValueError
-
     # run HOD
     halocat = halos.to_halotools(halos.attrs['BoxSize'])
-    hod = HODCatalog(halocat, seed=seed, **params)
-
-    # add RSD
-    line_of_sight = [0,0,1]
-    hod['RSDPosition'] = hod['Position'] + hod['VelocityOffset'] * line_of_sight
-    
-    hod.save('%s/HOD'%(folder), ('Position', 'Velocity', 'RSDPosition'))
-    return None 
+    hod = HODCatalog(halocat, seed=seed, **p_hod)
+    #hod.save('%s/HOD'%(folder), ('Position', 'Velocity', 'RSDPosition'))
+    return hod 
 
 
 def RSD(cat, LOS=[0,0,1]): 

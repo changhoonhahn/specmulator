@@ -21,15 +21,6 @@ mpl.rcParams['ytick.major.width'] = 1.5
 mpl.rcParams['legend.frameon'] = False
 
 
-def runHOD_LHD(): 
-    ''' Run HOD_LHD
-    ''' 
-    m_list = ['maximin', 'centermaximin', 'mdu', 'nohl']
-    for meth in m_list: 
-        lhd.HOD_LHD(samples=17, method=meth) 
-    return None 
-
-
 def thetaLHD():  
     ''' ***TESTED***
     Test thetaLHD using the HOD parameter priors 
@@ -112,4 +103,4 @@ def LHD():
 
 
 if __name__=="__main__": 
-    runHOD_LHD()
+    pass 
