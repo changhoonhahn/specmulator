@@ -21,7 +21,8 @@ def HOD_LHD():
     ''' 
     m_list = ['maximin', 'centermaximin', 'mdu', 'nohl']
     for meth in m_list: 
-        lhd.HOD_LHD(samples=17, method=meth) 
+        print(meth)
+        lhd.HOD_LHD(HODrange='sinha2017prior', samples=17, method=meth) 
     return None 
 
 

@@ -10,7 +10,10 @@ import numpy as np
 
 import util as UT
 
-import pynolh as pyNOLH
+try: 
+    import pynolh as pyNOLH
+except ModuleNotFoundError: 
+    pass 
 import pyDOE
 import lhsmdu as lhsMDU
 
