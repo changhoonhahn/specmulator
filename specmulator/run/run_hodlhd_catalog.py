@@ -16,13 +16,13 @@ import data as Dat
 import forwardmodel as FM 
 
 
-def HOD_LHD(): 
+def HOD_LHD(HODrange='sinha2017prior_narrow', samples=17): 
     ''' Build HOD_LHD for all the method options 
     ''' 
     m_list = ['maximin', 'centermaximin', 'mdu', 'nohl']
     for meth in m_list: 
         print(meth)
-        lhd.HOD_LHD(HODrange='sinha2017prior', samples=17, method=meth) 
+        lhd.HOD_LHD(HODrange=HODrange, samples=samples, method=meth) 
     return None 
 
 
