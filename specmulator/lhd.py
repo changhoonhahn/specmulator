@@ -27,7 +27,12 @@ def HOD_LHD(HODrange=None, samples=None, method=None):
     - Zheng Z., et al. (2007) -- arXiv:0512071
     - Sinha M., et al. (2017) -- arXiv:1708.04892 
     '''
-    if HODrange is 'sinha2017prior':  
+    if HODrange == 'sinha2017prior_narrow': # narrow alpha range 
+        range_descrip = "Sinha et al (2017) prior with narrow alpha range"
+        HOD_range_min = [11., 0.001, 6., 12., 0.5]
+        HOD_range_max = [12.2, 1., 14., 14., 1.5]
+        theta_lbl = ['log $M_\mathrm{min}$', '$\sigma_{\mathrm{log}\,M}$', 'log $M_0$', 'log $M_1$', r'$\alpha$']
+    elif HODrange == 'sinha2017prior':  
         range_descrip = "Sinha et al (2017) prior"
         HOD_range_min = [11., 0.001, 6., 12., 0.001]
         HOD_range_max = [12.2, 1., 14., 14., 2.]

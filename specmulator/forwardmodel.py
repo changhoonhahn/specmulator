@@ -58,7 +58,6 @@ def Galaxies(halos, p_hod, seed=None):
     # run HOD
     halocat = halos.to_halotools(halos.attrs['BoxSize'])
     hod = HODCatalog(halocat, seed=seed, **p_hod)
-    del halocat 
     return hod 
 
 
