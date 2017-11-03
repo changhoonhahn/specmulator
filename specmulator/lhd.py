@@ -12,10 +12,10 @@ import util as UT
 
 try: 
     import pynolh as pyNOLH
+    import pyDOE
+    import lhsmdu as lhsMDU
 except ModuleNotFoundError: 
     pass 
-import pyDOE
-import lhsmdu as lhsMDU
 
 
 def HOD_LHD(HODrange=None, samples=None, method=None):

@@ -1,11 +1,12 @@
 #!/bin/bash
 #SBATCH -p regular 
 #SBATCH -n 1
-#SBATCH -t 00:30:00 
+#SBATCH -t 01:00:00 
 #SBATCH -J hodlhd
 #SBATCH -o hodlhd.o
 
 source /usr/common/contrib/bccp/conda-activate.sh 3.6 
+#module load python/3.6-anaconda-4.4
 
 #module load python/2.7-anaconda
 

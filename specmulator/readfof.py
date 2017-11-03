@@ -83,7 +83,7 @@ class FoF_catalog:
             curpos = f.tell()
             f.seek(0,os.SEEK_END)
             if curpos != f.tell():
-                print "Warning: finished reading before EOF for tab file",fnb
+                print("Warning: finished reading before EOF for tab file",fnb)
             f.close()
             fnb+=1
             if fnb==self.Nfiles: Final=True
@@ -117,7 +117,7 @@ class FoF_catalog:
                 curpos = f.tell()
                 f.seek(0,os.SEEK_END)
                 if curpos != f.tell():
-                    print "Warning: finished reading before EOF for IDs file",fnb
+                    print("Warning: finished reading before EOF for IDs file",fnb)
                 f.close()
                 fnb+=1
                 if fnb==Nfiles: Final=True

@@ -134,9 +134,9 @@ def find_block(filename, format, swap, block, block_num, only_list_blocks=False)
     
         if only_list_blocks:
             if format==2:
-                print curblock_num,curblock,f.tell(),curblocksize
+                print(curblock_num,curblock,f.tell(),curblocksize)
             else:
-                print curblock_num,f.tell(),curblocksize
+                print(curblock_num,f.tell(),curblocksize)
             found = False
         
     
@@ -148,15 +148,15 @@ def find_block(filename, format, swap, block, block_num, only_list_blocks=False)
             blocksize_check = (np.fromfile(f,dtype=np.uint32,count=1))[0]
             if swap: blocksize_check = blocksize_check.byteswap()
             if (curblocksize != blocksize_check):
-                print "something wrong"
+                print("something wrong")
                 sys.exit()
             curblock_num += 1
     f.close()
       
     if ((not found) and (not only_list_blocks)):
-        print found
-        print only_list_blocks
-        print "Error: block not found"
+        print(found)
+        print(only_list_blocks)
+        print("Error: block not found")
         sys.exit()
     
     if (not only_list_blocks):
@@ -171,12 +171,12 @@ def read_block(filename, block, parttype=-1, physical_velocities=True, no_masses
     for instance nall=np.array([0,2048**3,0,0,0,0]) 
     '''
     if (verbose):
-        print "reading block", block
+        print("reading block", block)
 
     blockadd=0
     blocksub=0
     if (verbose):	
-        print "Gadget format"
+        print("Gadget format")
     blockadd=0
     if no_masses==True:
         if (verbose):	

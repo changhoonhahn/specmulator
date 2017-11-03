@@ -26,7 +26,7 @@ def HOD_LHD():
     return None 
 
 
-def hodlhd_catalogs(mneut, nreal, nzbin, seed_hod, HODrange='sinha2017prior', method='nohl', samples=17): 
+def hodlhd_catalogs(mneut, nreal, nzbin, seed_hod, HODrange='sinha2017prior', method='mdu', samples=17): 
     ''' Generate HOD catalogs from specified halo catalog 
     based on the LHD sampled by the Sinha M., et al. (2017) HOD parameter priors. 
 
@@ -66,23 +66,35 @@ def hodlhd_catalogs(mneut, nreal, nzbin, seed_hod, HODrange='sinha2017prior', me
         keylist = ['logMmin', 'sigma_logM', 'logM0', 'logM1', 'alpha'] 
 
     lhcube = lhd.HOD_LHD(HODrange=HODrange, samples=samples, method=method)
+
     # import Neutrino halo with mneut eV, realization # nreal, at z specified by nzbin 
     halos = Dat.NeutHalos(mneut, nreal, nzbin) 
+    failed = []  
     for i_p in range(lhcube.shape[0]): 
-        print('%i of %i LHD'%(i_p,lhcube.shape[0]))
+        print('%i of %i LHD'%(i_p+1,lhcube.shape[0]))
         p_hod = {} 
         for ik, k in enumerate(keylist): 
             p_hod[k] = lhcube[i_p,ik]
+        print(p_hod)
         # populate the halo catalogs using HOD 
-        gals = FM.Galaxies(halos, p_hod, seed=seed_hod)  
+        try: 
+            gals = FM.Galaxies(halos, p_hod, seed=seed_hod)  
+        except MemoryError: 
+            # some parameter values generate too many galaxies and causes a memory failure!  
+            # these will be jotted down 
+            failed.append(i_p)
+            continue 
         # RSD position (hardcoded in the z direction) 
         gals['RSDPosition'] = FM.RSD(gals, LOS=[0,0,1]) 
         # save to file 
         folder = ''.join([UT.dat_dir(), 'lhd/', str(mneut), 'eV_', str(nreal), '_z', str(nzbin), '/']) 
         if not os.path.exists(folder): # make directory
             os.mkdir(folder) 
-        gals.save('%s/HOD_seed%i_%i'%(folder,seed_hod,i_p), ('Position', 'Velocity', 'RSDPosition'))
+        gals.save('%s/HOD%s_seed%i_%i'%(folder,method,seed_hod,i_p), ('Position', 'Velocity', 'RSDPosition'))
         del gals
+
+    if len(failed) > 0: 
+        raise ValueError(''.join([','.join([str(f) for f in failed]), ' failed due to memory error!'])) 
     return None 
 
 
@@ -93,7 +105,7 @@ def hodlhd_observables(obvs, mneut, nreal, nzbin, seed_hod, HODrange='sinha2017p
 
 
 if __name__=="__main__": 
-    # e.g. python run/run_hodlhd_catalog.py catalog 0.0 1 4 1 
+    # e.g. python run/run_hodlhd_catalog.py catalog 0.0 1 4 1 6
     mod = Sys.argv[1]
     if mod == 'lhd': 
         HOD_LHD()
@@ -101,7 +113,7 @@ if __name__=="__main__":
         mneut = float(Sys.argv[2])
         nreal = int(Sys.argv[3]) 
         nzbin = int(Sys.argv[4]) 
-        seed_hod = int(Sys.argv[5]) 
+        seed_hod = int(Sys.argv[6]) 
     
         if mod == 'catalog': 
-            hodlhd_catalogs(mneut, nreal, nzbin, seed_hod, HODrange='sinha2017prior', method='nohl', samples=17)
+            hodlhd_catalogs(mneut, nreal, nzbin, seed_hod, HODrange='sinha2017prior', method='mdu', samples=17)
