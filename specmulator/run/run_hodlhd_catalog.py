@@ -81,7 +81,7 @@ def hodlhd_catalogs(mneut, nreal, nzbin, seed_hod, HODrange='sinha2017prior_narr
         # RSD position (hardcoded in the z direction) 
         gals['RSDPosition'] = FM.RSD(gals, LOS=[0,0,1]) 
         # save to file 
-        folder = ''.join([UT.dat_dir(), 'lhd/', str(mneut), 'eV_', str(nreal), '_z', str(nzbin), '/']) 
+        folder = ''.join([UT.dat_dir(), 'lhd/', str(mneut), 'eV_', str(nreal), '_z', str(nzbin), '_', str(samples), 'samples/']) 
         if not os.path.exists(folder): # make directory
             os.mkdir(folder) 
         gals.save('%s/HOD%s_seed%i_%i'%(folder,method,seed_hod,i_p), ('Position', 'Velocity', 'RSDPosition'))
