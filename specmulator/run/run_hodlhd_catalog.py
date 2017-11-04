@@ -93,7 +93,8 @@ def hodlhd_catalogs(mneut, nreal, nzbin, seed_hod, HODrange='sinha2017prior_narr
 def hodlhd_observables(obvs, mneut, nreal, nzbin, seed_hod, HODrange='sinha2017prior_narrow', method='nohl', samples=17): 
     ''' Calculate the observables of the HOD LHD catalogs
     '''
-    pass
+    if obvs == 'plk': # power spectrum multipole 
+        FM.Observables(cat, observable='plk', rsd=False, Nmesh=360)
 
 
 if __name__=="__main__": 
