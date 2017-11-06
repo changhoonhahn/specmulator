@@ -32,7 +32,7 @@ do
         then 
             globus transfer $source_ep:$sourdir/$mneut/$real/groups_004/ \
                 $dest_ep:$destdir/$mneut/$real/groups_004 --recursive
-            sleep 600s 
+            sleep 300s 
         else
             echo $groupfile' already exists'
         fi 

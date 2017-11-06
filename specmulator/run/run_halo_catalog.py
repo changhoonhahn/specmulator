@@ -5,6 +5,7 @@ Code for generating observables for halo catalogs
 
 '''
 import os 
+import time 
 import sys as Sys
 import numpy as np 
 
@@ -60,9 +61,10 @@ def NeutHalo_pre3PCF(mneut, nreal, nzbin, zspace=False):
         halos['RSDPosition'] = FM.RSD(halos, LOS=[0,0,1])
     
     # halo positions
-    x = halos['Position'][:,0]
-    y = halos['Position'][:,1]
-    z = halos['Position'][:,2]
+    xyz = np.array(halos['Position'])
+    x = xyz[:,0]
+    y = xyz[:,1]
+    z = xyz[:,2]
     # weights (all ones!) 
     w = np.ones(len(x)) 
     
@@ -76,8 +78,9 @@ def NeutHalo_pre3PCF(mneut, nreal, nzbin, zspace=False):
     # header 
     hdr = ''.join(['m neutrino = ', str(mneut), ' eV, realization ', str(nreal), ', zbin ', str(nzbin)]) 
 
+    outarr = np.array([x, y, z, w]).T
     # write to file 
-    np.savetxt(fout, np.array([x, y, z, w]).T, header=hdr) 
+    np.savetxt(fout, outarr, header=hdr) 
     print('--- halo written to ---\n %s' % (fout))
     return None 
 
