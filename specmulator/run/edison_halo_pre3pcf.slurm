@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH -p debug 
 #SBATCH -n 1
-#SBATCH -t 00:10:00 
+#SBATCH -t 00:30:00 
 #SBATCH -J pre3PCF
 #SBATCH -o pre3PCF.o
 
