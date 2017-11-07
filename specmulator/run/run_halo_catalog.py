@@ -20,6 +20,10 @@ import forwardmodel as FM
 def NeutHalo_Plk(mneut, nreal, nzbin, zspace=False): 
     ''' Calculate the powerspectrum multipoles for Paco's Neutrio 
     halo catalogs
+
+    notes
+    -----
+    * Takes ~20 seconds.
     '''
     # import Neutrino halo with mneut eV, realization # nreal, at z specified by nzbin 
     halos = Dat.NeutHalos(mneut, nreal, nzbin) 
@@ -117,14 +121,18 @@ if __name__=="__main__":
         else: 
             raise ValueError
         nthreads = int(Sys.argv[7])
-        
-        args_list = [(mneut, ireal, nzbin, zbool) for ireal in np.arange(nreal_i, nreal_f+1)]
-        pool = Pewl(processes=nthreads)
-        mapfn = pool.map
-        results = mapfn(_NeutHalo_pre3PCF, args_list) 
-        pool.close()
-        pool.terminate()
-        pool.join()
+
+        if nthreads > 1: 
+            args_list = [(mneut, ireal, nzbin, zbool) for ireal in np.arange(nreal_i, nreal_f+1)]
+            pool = Pewl(processes=nthreads)
+            mapfn = pool.map
+            results = mapfn(_NeutHalo_pre3PCF, args_list) 
+            pool.close()
+            pool.terminate()
+            pool.join()
+        else:
+            for ireal in range(nreal_i, nreal_f+1):  
+                NeutHalo_pre3PCF(mneut, ireal, nzbin, zspace=zbool) 
     elif arg1 == 'plk': 
         nreal = int(Sys.argv[3])
         nzbin = int(Sys.argv[4])
