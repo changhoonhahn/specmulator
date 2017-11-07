@@ -5,7 +5,7 @@ dest_dir=/global/homes/c/chahah/projects/specmulator/dat
 echo "password"
 read -s pwd
 
-for mneut in 0.0eV 0.06eV 0.10eV 0.15eV #0.6eV
+for mneut in 0.10eV 0.15eV 0.6eV # 0.0eV 0.06eV  
 do 
     # check that the neutrino directory exists
     mneutdir=$dest_dir/$mneut/
@@ -13,7 +13,7 @@ do
         sshpass -p $pwd ssh edison "mkdir "$mneutdir
     fi 
 
-    for real in {1..10}; do 
+    for real in {1..100}; do 
         groupfile_source=$source_dir/$mneut/$real/groups_004/group_ids_004.0
         if [ -f $groupfile_source ]; then 
             # check that the realization directory exists

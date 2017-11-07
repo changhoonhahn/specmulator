@@ -5,9 +5,9 @@ dest_ep='1c93ed5e-b8da-11e7-b143-22000a92523b'
 sourdir=/mnt/ceph/users/fvillaescusa/Neutrino_simulations/Sims_Dec16_2
 destdir=/Users/chang/projects/specmulator/dat
 
-for mneut in 0.0eV #0.06eV 0.10eV 0.15eV 0.6eV
+for mneut in 0.9eV # 0.10eV 0.15eV 0.6eV
 do 
-    for real in {34..100}
+    for real in {1..2}
     do 
         # check whether the realization directory exists 
         realdir=$destdir/$mneut/$real
@@ -32,7 +32,7 @@ do
         then 
             globus transfer $source_ep:$sourdir/$mneut/$real/groups_004/ \
                 $dest_ep:$destdir/$mneut/$real/groups_004 --recursive
-            sleep 300s 
+            sleep 120s 
         else
             echo $groupfile' already exists'
         fi 
