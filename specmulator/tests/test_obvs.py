@@ -23,7 +23,8 @@ def Plk_halo(mneut=0.0, nzbin=4, zspace=False):
     ''' Test the Plk_halo 
     '''
     p0ks, p2ks, p4ks = [], [], [] 
-    for ireal in range(1, 51):
+    for ireal in range(1, 101): 
+        # read all 100 realizations
         plk_i = Obvs.Plk_halo(mneut, ireal, nzbin, zspace=zspace) 
         if ireal == 1: k = plk_i['k']
         p0ks.append(plk_i['p0k']) 
@@ -55,5 +56,5 @@ def Plk_halo(mneut=0.0, nzbin=4, zspace=False):
 
 
 if __name__=="__main__": 
-    Plk_halo(zspace=False)
-    Plk_halo(zspace=True)
+    Plk_halo(mneut=0.10, zspace=False)
+    Plk_halo(mneut=0.10, zspace=True)

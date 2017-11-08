@@ -15,7 +15,8 @@ def Plk_halo(mneut, nreal, nzbin, zspace=False):
     bin `nzbin` in either real/redshift space. 
 
     '''
-    dir = ''.join([UT.dat_dir(), str(mneut), 'eV/' ]) 
+    if mneut == 0.1: dir = ''.join([UT.dat_dir(), '0.10eV/'])
+    else: dir = ''.join([UT.dat_dir(), str(mneut), 'eV/'])
     if zspace: str_space = 'z' # redhsift
     else: str_space = 'r' # real 
     f = ''.join([dir, 'plk.groups.', str(mneut), 'eV.', str(nreal), '.nzbin', str(nzbin), 
