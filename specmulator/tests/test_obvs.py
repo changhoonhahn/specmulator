@@ -20,7 +20,8 @@ mpl.rcParams['legend.frameon'] = False
 
 
 def Plk_halo(mneut=0.0, nzbin=4, zspace=False): 
-    ''' Test the Plk_halo 
+    ''' **TESTED --- Nov 7, 2017 ** 
+    Test the Plk_halo 
     '''
     p0ks, p2ks, p4ks = [], [], [] 
     for ireal in range(1, 101): 
@@ -56,5 +57,5 @@ def Plk_halo(mneut=0.0, nzbin=4, zspace=False):
 
 
 if __name__=="__main__": 
-    Plk_halo(mneut=0.10, zspace=False)
-    Plk_halo(mneut=0.10, zspace=True)
+    Plk_halo(mneut=0.15, zspace=False)
+    Plk_halo(mneut=0.15, zspace=True)
