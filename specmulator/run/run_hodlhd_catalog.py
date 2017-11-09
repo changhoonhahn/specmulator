@@ -26,7 +26,7 @@ def HOD_LHD(HODrange='sinha2017prior_narrow', samples=17):
     return None 
 
 
-def hodlhd_catalogs(mneut, nreal, nzbin, seed_hod, HODrange='sinha2017prior_narrow', method='mdu', samples=17): 
+def hodlhd_catalogs(mneut, nreal, nzbin, seed_hod, i_p, HODrange='sinha2017prior_narrow', method='mdu', samples=17): 
     ''' Generate HOD catalogs from specified halo catalog 
     based on the LHD sampled by the Sinha M., et al. (2017) HOD parameter priors. 
 
@@ -62,42 +62,17 @@ def hodlhd_catalogs(mneut, nreal, nzbin, seed_hod, HODrange='sinha2017prior_narr
     LOS : list, optional 
         3 element list of integers 0 or 1 that specify the the line-of-sight direction 
     '''
-    for i_p in range(samples): 
-        _ = lhd.HODLHD_NeutCatalog(mneut, nreal, nzbin, seed_hod, i_p, 
-                HODrange=HODrange, method=method, samples=samples)
+    _ = lhd.HODLHD_NeutCatalog(mneut, nreal, nzbin, seed_hod, i_p, 
+            HODrange=HODrange, method=method, samples=samples)
     return None 
 
 
-def hodlhd_observables(obvs, mneut, nreal, nzbin, seed_hod, HODrange='sinha2017prior_narrow', method='nohl', samples=17, 
+def hodlhd_observables(obvs, mneut, nreal, nzbin, seed_hod, i_p, HODrange='sinha2017prior_narrow', method='nohl', samples=17, 
         Nmesh=360, rsd=True): 
     ''' Calculate and save observables of the HOD LHD catalogs
     '''
-    folder = ''.join([UT.dat_dir(), 
-        'lhd/', str(mneut), 'eV_', str(nreal), '_z', str(nzbin), '_', str(samples), 'samples/', 
-        'HOD', method, '_seed', str(seed_hod), '_', str(i_p), '/']) 
-    gals = lhd.HODLHD_NeutCatalog(mneut, nreal, nzbin, seed_hod, i_p, 
-            HODrange=HODrange, method=method, samples=samples)
-
-    if obvs == 'plk': # power spectrum multipole 
-        plk = FM.Observables(gals, observable='plk', rsd=rsd, Nmesh=Nmesh)
-        
-        if rsd: str_rsd = '.zspace'
-        else: str_rsd = '.rspace'
-        # save to file 
-        f = open(''.join([folder, 
-            'pk.menut', str(mneut), '.nreal', str(nreal), '.nzbin', str(nzbin), str_rsd, 
-            '.', str(Nmesh), '.nbkt.dat']), 'w')
-        f.write("### header ### \n")
-        f.write("# shotnoise %f \n" % plk['shotnoise'])
-        f.write("columns : k , P0, P2, P4 \n")
-        f.write('### header ### \n') 
-
-        for ik in range(len(plk['k'])): 
-            f.write("%f \t %f \t %f \t %f" % (plk['k'][ik], plk['p0k'][ik], plk['p2k'][ik], plk['p4k'][ik]))
-            f.write("\n") 
-        f.close() 
-    else: 
-        raise NotImplementedError('only Plk implemented') 
+    _ = lhd.HODLHD_NeutObvs(obvs, mneut, nreal, nzbin, seed_hod, i_p,
+            HODrange=HODrange, method=method, samples=samples, Nmesh=Nmesh, rsd=rsd)
     return None 
 
 
@@ -113,15 +88,23 @@ if __name__=="__main__":
         nreal = int(Sys.argv[3]) 
         nzbin = int(Sys.argv[4]) 
         seed_hod = int(Sys.argv[5]) 
+        i_p = int(Sys.argv[6]) 
 
         print('%f eV'%(mneut))
         print('realization %i'%(nreal))
         print('nzbin %i'%(nzbin))
-        print('random seed',seed_hod)
+        print('random seed %i ' % seed_hod)
+        print('%i th HOD parameter' % i_p)
     
         if mod == 'catalog': 
-            hodlhd_catalogs(mneut, nreal, nzbin, seed_hod, HODrange='sinha2017prior_narrow', method='mdu', samples=17)
+            hodlhd_catalogs(mneut, nreal, nzbin, seed_hod, i_p, HODrange='sinha2017prior_narrow', method='mdu', samples=17)
         elif mod == 'observable': 
-            obvs = Sys.argv[6] 
-            hodlhd_observables(obvs, mneut, nreal, nzbin, seed_hod, HODrange='sinha2017prior_narrow', method='mdu', samples=17)
+            obvs = Sys.argv[7] 
+            space = Sys.argv[8]
+            if space == 'real': 
+                rsd_bool = False 
+            elif space == 'z': 
+                rsd_bool = True 
 
+            hodlhd_observables(obvs, mneut, nreal, nzbin, seed_hod, i_p, 
+                    HODrange='sinha2017prior_narrow', method='mdu', samples=17, Nmesh=360, rsd=rsd_bool)

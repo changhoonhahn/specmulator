@@ -7,9 +7,11 @@ Code for the Latin Hypercube Design
 import os 
 import random
 import numpy as np 
+import nbodykit.lab as NBlab
 
 import util as UT
 import data as Dat
+import forwardmodel as FM
 
 try: 
     import pynolh as pyNOLH
@@ -17,6 +19,54 @@ try:
     import lhsmdu as lhsMDU
 except ModuleNotFoundError: 
     pass 
+
+
+def HODLHD_NeutObvs(obvs, mneut, nreal, nzbin, seed_hod, i_p, HODrange='sinha2017prior_narrow', method='nohl', samples=17, 
+        Nmesh=360, rsd=True): 
+    ''' Calculate and save observables of the HOD LHD catalogs
+    '''
+    if rsd: str_rsd = '.zspace'
+    else: str_rsd = '.rspace'
+    folder = ''.join([UT.dat_dir(), 
+        'lhd/', str(mneut), 'eV_', str(nreal), '_z', str(nzbin), '_', str(samples), 'samples/', 
+        'HOD', method, '_seed', str(seed_hod), '_', str(i_p), '/']) 
+    if obvs == 'plk': 
+        fname = ''.join([folder, 
+            'pk.menut', str(mneut), '.nreal', str(nreal), '.nzbin', str(nzbin), str_rsd, '.', str(Nmesh), '.nbkt.dat'])
+
+    if os.path.isfile(fname): 
+        print('--- reading from --- \n %s' % fname) 
+        # read observalbe from file 
+        k, p0k, p2k, p4k = np.loadtxt(fname, skiprows=4, unpack=True, usecols=[0,1,2,3])
+        obvs = {'k': k, 'p0k': p0k, 'p2k': p2k, 'p4k':p4k} 
+
+        # readin shot-noise from header 
+        f = open(fname, 'r') 
+        _ = f.readline() 
+        str_sn = f.readline() 
+        obvs['shotnoise'] = float(str_sn.strip().split('shotnoise')[-1])
+    else: 
+        gals = HODLHD_NeutCatalog(mneut, nreal, nzbin, seed_hod, i_p, 
+                HODrange=HODrange, method=method, samples=samples)
+
+        if obvs == 'plk': # power spectrum multipole 
+            plk = FM.Observables(gals, observable='plk', rsd=rsd, Nmesh=Nmesh)
+            
+            # save to file 
+            f = open(fname, 'w')
+            f.write("### header ### \n")
+            f.write("# shotnoise %f \n" % plk['shotnoise'])
+            f.write("# columns : k , P0, P2, P4 \n")
+            f.write('### header ### \n') 
+
+            for ik in range(len(plk['k'])): 
+                f.write("%f \t %f \t %f \t %f" % (plk['k'][ik], plk['p0k'][ik], plk['p2k'][ik], plk['p4k'][ik]))
+                f.write("\n") 
+            f.close() 
+            obvs = plk
+        else: 
+            raise NotImplementedError('only Plk implemented') 
+    return obvs
 
 
 def HODLHD_NeutCatalog(mneut, nreal, nzbin, seed_hod, i_p, HODrange='sinha2017prior_narrow', method='mdu', samples=17): 

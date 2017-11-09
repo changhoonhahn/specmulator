@@ -25,11 +25,7 @@ def Plk_halo(mneut, nreal, nzbin, zspace=False):
 
     # read in plk 
     k,p0k,p2k,p4k = np.loadtxt(f, skiprows=3, unpack=True, usecols=[0,1,2,3]) 
-    plk = {} 
-    plk['k'] = k 
-    plk['p0k'] = p0k 
-    plk['p2k'] = p2k 
-    plk['p4k'] = p4k 
+    plk = {'k': k, 'p0k': p0k, 'p2k': p2k, 'p4k':p4k} 
 
     # readin shot-noise from header 
     with open(f) as lines: 
