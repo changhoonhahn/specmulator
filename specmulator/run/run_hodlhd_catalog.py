@@ -93,16 +93,25 @@ def hodlhd_catalogs(mneut, nreal, nzbin, seed_hod, HODrange='sinha2017prior_narr
 def hodlhd_observables(obvs, mneut, nreal, nzbin, seed_hod, HODrange='sinha2017prior_narrow', method='nohl', samples=17): 
     ''' Calculate the observables of the HOD LHD catalogs
     '''
+    if mneut == 0.1: 
+        dir = ''.join([UT.dat_dir(), '0.10eV/', str(nreal)])
+    else: 
+        dir = ''.join([UT.dat_dir(), str(mneut), 'eV/', str(nreal)])
+    # read in Gadget header
+    header = RS.read_gadget_header(''.join([dir, '/snapdir_', str(nzbin).zfill(3), '/snap_', str(nzbin).zfill(3)]))
+
     if obvs == 'plk': # power spectrum multipole 
         FM.Observables(cat, observable='plk', rsd=False, Nmesh=360)
 
 
 if __name__=="__main__": 
-    # e.g. python run/run_hodlhd_catalog.py catalog 0.0 1 4 1
     mod = Sys.argv[1]
-    if mod == 'lhd': 
+    if mod == 'lhd':
+        # e.g. python run/run_hodlhd_catalog.py lhd
         HOD_LHD()
     elif mod in ['catalog', 'observable']: 
+        # e.g. python run/run_hodlhd_catalog.py catalog 0.0 1 4 1
+        # e.g. python run/run_hodlhd_catalog.py observation 0.0 1 4 1 plk
         mneut = float(Sys.argv[2])
         nreal = int(Sys.argv[3]) 
         nzbin = int(Sys.argv[4]) 
@@ -115,3 +124,7 @@ if __name__=="__main__":
     
         if mod == 'catalog': 
             hodlhd_catalogs(mneut, nreal, nzbin, seed_hod, HODrange='sinha2017prior_narrow', method='mdu', samples=17)
+        elif mod == 'observable': 
+            obvs = Sys.argv[6] 
+            hodlhd_observables(obvs, mneut, nreal, nzbin, seed_hod, HODrange='sinha2017prior_narrow', method='mdu', samples=17)
+

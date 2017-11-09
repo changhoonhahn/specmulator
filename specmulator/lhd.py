@@ -9,6 +9,7 @@ import random
 import numpy as np 
 
 import util as UT
+import data as Dat
 
 try: 
     import pynolh as pyNOLH
@@ -16,6 +17,82 @@ try:
     import lhsmdu as lhsMDU
 except ModuleNotFoundError: 
     pass 
+
+
+def HODLHD_NeutCatalog(mneut, nreal, nzbin, seed_hod, i_p, HODrange='sinha2017prior_narrow', method='mdu', samples=17): 
+    ''' Generate HOD catalogs from specified halo catalog 
+    based on the LHD sampled by the Sinha M., et al. (2017) HOD parameter priors. 
+
+    parameters
+    ----------
+    mneut : float, 
+        total neutrino mass 
+
+    nreal : int,
+        realization number 
+
+    nzbin : int, 
+        integer specifying the redshift of the snapshot. 
+        nzbin = 0 --> z=3
+        nzbin = 1 --> z=2
+        nzbin = 2 --> z=1
+        nzbin = 3 --> z=0.5
+        nzbin = 4 --> z=0
+    
+    seed_hod : int, 
+        random seed for the HOD 
+
+    HODrange : str, optional
+        string specifying the HOD range. Default is 'sinha2017prior', which uses
+        the prior from Sinha et al. (2017) 
+
+    method : str 
+        string specifying the method of LHD. Default is nohl 
+
+    samples : int, optional 
+        sample size of the LHD. Default is 17, which is from the fixed sample size of NOHL method.
+
+    LOS : list, optional 
+        3 element list of integers 0 or 1 that specify the the line-of-sight direction 
+    '''
+    folder = ''.join([UT.dat_dir(), 
+        'lhd/', str(mneut), 'eV_', str(nreal), '_z', str(nzbin), '_', str(samples), 'samples/', 
+        'HOD', method, '_seed', str(seed_hod), '_', str(i_p), '/']) 
+    
+    assert i_p < samples
+        
+    # read in  Neutrino halo with mneut eV, realization # nreal, at z specified by nzbin 
+    halos = Dat.NeutHalos(mneut, nreal, nzbin) 
+
+    if not np.all([os.path.exists(folder+subfold+'/') for subfold in ['Position', 'Velocity', 'RSDPosition']]):   
+        # generate the LHD HOD catalog  
+        if HODrange in ['sinha2017prior', 'sinha2017prior_narrow']:  
+            keylist = ['logMmin', 'sigma_logM', 'logM0', 'logM1', 'alpha'] 
+        lhcube = HOD_LHD(HODrange=HODrange, samples=samples, method=method)
+
+        #for i_p in range(samples): 
+        print('%i of %i LHD'%(i_p+1,samples))
+        p_hod = {} 
+        for ik, k in enumerate(keylist): 
+            p_hod[k] = lhcube[i_p,ik]
+        print(p_hod)
+        # populate the halo catalogs using HOD 
+        gals = FM.Galaxies(halos, p_hod, seed=seed_hod)  
+        
+        # RSD position (hardcoded in the z direction) 
+        gals['RSDPosition'] = FM.RSD(gals, LOS=[0,0,1]) 
+
+        parent_dir = '/'.join(folder[:-1].split('/')[:-1])+'/'
+        if not os.path.exists(parent_dir): # make directory
+            os.mkdir(parent_dir) 
+        # save to file 
+        gals.save(folder, ('Position', 'Velocity', 'RSDPosition'))
+        del gals
+    else:
+        # read from file 
+        gals = NBlab.BigFileCatalog(folder, header='Header')
+        gals.attrs = halos.attrs.copy() 
+    return None 
 
 
 def HOD_LHD(HODrange=None, samples=None, method=None):
