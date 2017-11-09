@@ -62,46 +62,43 @@ def hodlhd_catalogs(mneut, nreal, nzbin, seed_hod, HODrange='sinha2017prior_narr
     LOS : list, optional 
         3 element list of integers 0 or 1 that specify the the line-of-sight direction 
     '''
-    if HODrange in ['sinha2017prior', 'sinha2017prior_narrow']:  
-        keylist = ['logMmin', 'sigma_logM', 'logM0', 'logM1', 'alpha'] 
-    lhcube = lhd.HOD_LHD(HODrange=HODrange, samples=samples, method=method)
-
-    # import Neutrino halo with mneut eV, realization # nreal, at z specified by nzbin 
-    halos = Dat.NeutHalos(mneut, nreal, nzbin) 
-
     for i_p in range(samples): 
-        print('%i of %i LHD'%(i_p+1,samples))
-        p_hod = {} 
-        for ik, k in enumerate(keylist): 
-            p_hod[k] = lhcube[i_p,ik]
-        print(p_hod)
-        # populate the halo catalogs using HOD 
-        gals = FM.Galaxies(halos, p_hod, seed=seed_hod)  
-        
-        # RSD position (hardcoded in the z direction) 
-        gals['RSDPosition'] = FM.RSD(gals, LOS=[0,0,1]) 
-        # save to file 
-        folder = ''.join([UT.dat_dir(), 'lhd/', str(mneut), 'eV_', str(nreal), '_z', str(nzbin), '_', str(samples), 'samples/']) 
-        if not os.path.exists(folder): # make directory
-            os.mkdir(folder) 
-        gals.save('%s/HOD%s_seed%i_%i'%(folder,method,seed_hod,i_p), ('Position', 'Velocity', 'RSDPosition'))
-        del gals
-
+        _ = lhd.HODLHD_NeutCatalog(mneut, nreal, nzbin, seed_hod, i_p, 
+                HODrange=HODrange, method=method, samples=samples)
     return None 
 
 
-def hodlhd_observables(obvs, mneut, nreal, nzbin, seed_hod, HODrange='sinha2017prior_narrow', method='nohl', samples=17): 
-    ''' Calculate the observables of the HOD LHD catalogs
+def hodlhd_observables(obvs, mneut, nreal, nzbin, seed_hod, HODrange='sinha2017prior_narrow', method='nohl', samples=17, 
+        Nmesh=360, rsd=True): 
+    ''' Calculate and save observables of the HOD LHD catalogs
     '''
-    if mneut == 0.1: 
-        dir = ''.join([UT.dat_dir(), '0.10eV/', str(nreal)])
-    else: 
-        dir = ''.join([UT.dat_dir(), str(mneut), 'eV/', str(nreal)])
-    # read in Gadget header
-    header = RS.read_gadget_header(''.join([dir, '/snapdir_', str(nzbin).zfill(3), '/snap_', str(nzbin).zfill(3)]))
+    folder = ''.join([UT.dat_dir(), 
+        'lhd/', str(mneut), 'eV_', str(nreal), '_z', str(nzbin), '_', str(samples), 'samples/', 
+        'HOD', method, '_seed', str(seed_hod), '_', str(i_p), '/']) 
+    gals = lhd.HODLHD_NeutCatalog(mneut, nreal, nzbin, seed_hod, i_p, 
+            HODrange=HODrange, method=method, samples=samples)
 
     if obvs == 'plk': # power spectrum multipole 
-        FM.Observables(cat, observable='plk', rsd=False, Nmesh=360)
+        plk = FM.Observables(gals, observable='plk', rsd=rsd, Nmesh=Nmesh)
+        
+        if rsd: str_rsd = '.zspace'
+        else: str_rsd = '.rspace'
+        # save to file 
+        f = open(''.join([folder, 
+            'pk.menut', str(mneut), '.nreal', str(nreal), '.nzbin', str(nzbin), str_rsd, 
+            '.', str(Nmesh), '.nbkt.dat']), 'w')
+        f.write("### header ### \n")
+        f.write("# shotnoise %f \n" % plk['shotnoise'])
+        f.write("columns : k , P0, P2, P4 \n")
+        f.write('### header ### \n') 
+
+        for ik in range(len(plk['k'])): 
+            f.write("%f \t %f \t %f \t %f" % (plk['k'][ik], plk['p0k'][ik], plk['p2k'][ik], plk['p4k'][ik]))
+            f.write("\n") 
+        f.close() 
+    else: 
+        raise NotImplementedError('only Plk implemented') 
+    return None 
 
 
 if __name__=="__main__": 

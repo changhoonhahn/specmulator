@@ -87,12 +87,11 @@ def HODLHD_NeutCatalog(mneut, nreal, nzbin, seed_hod, i_p, HODrange='sinha2017pr
             os.mkdir(parent_dir) 
         # save to file 
         gals.save(folder, ('Position', 'Velocity', 'RSDPosition'))
-        del gals
     else:
         # read from file 
         gals = NBlab.BigFileCatalog(folder, header='Header')
-        gals.attrs = halos.attrs.copy() 
-    return None 
+        gals.cosmo = halos.cosmo # save cosmology 
+    return gals 
 
 
 def HOD_LHD(HODrange=None, samples=None, method=None):
