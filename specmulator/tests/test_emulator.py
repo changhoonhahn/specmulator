@@ -25,7 +25,8 @@ mpl.rcParams['legend.frameon'] = False
 def HODemulator_PkNN(mneut=0.0, nreal=1, nzbin=4, seed_hod=1, Nmesh=360, rsd=True, 
         HODrange='sinha2017prior_narrow', method='mdu', samples=17):
     ''' Test simple gaussian process emulator by randomly 
-    sampling HOD parameter space and compare it to GP predictions 
+    choosing an HOD parameter then comparing it to the observables
+    of HOD parameters near it 
     '''
     emu = Emu.HODemulator() 
     lhcube = emu.read_HODLHD(HODrange=HODrange, method=method, samples=samples)
@@ -34,7 +35,7 @@ def HODemulator_PkNN(mneut=0.0, nreal=1, nzbin=4, seed_hod=1, Nmesh=360, rsd=Tru
     n_comp = len(emu.GPs) # number of GPs 
     print("%i GPs" % n_comp)
 
-    # randomly select a value in HOD parameter space 
+    # randomly select one theta in HOD parameter space 
     p_hod = np.zeros(len(emu.HOD_params))
     for ik, k in enumerate(emu.HOD_params): 
         p_hod[ik] = 0.5*(emu.HODrange_max[ik] + emu.HODrange_min[ik]) + \
@@ -43,24 +44,42 @@ def HODemulator_PkNN(mneut=0.0, nreal=1, nzbin=4, seed_hod=1, Nmesh=360, rsd=Tru
     p0ks_gp = np.zeros(n_comp)
     vars_gp = np.zeros(n_comp)
     for i in range(n_comp): 
-        mu, var = emu.GPs[i].predict(emu.obvs[:,i], p_hod)
+        mu, var = emu.GPs[i].predict(emu.obvs[:,i], np.array((p_hod,)))
         p0ks_gp[i] = mu 
         vars_gp[i] = var 
+
+    # select parameters in lhcube "closest" to 
+    # the chosen parameter above
+    rho_hod = np.sqrt(np.sum(((lhcube - p_hod)/(np.array(emu.HODrange_max) - np.array(emu.HODrange_min)))**2, axis=0))
+    i_rhosort = np.argsort(rho_hod)
+    i_NN = i_rhosort[:5]  # 5 nearest HOD LHD points 
     
-    fig = plt.figure() 
-    sub = fig.add_subplot(111)
-    for i in range(p_hods.shape[0]): 
-        sub.plot(emu.k, (p0ks_gp[i,:]-p0ks_mock[i])/p0ks_mock[i], ls='-')#, c=pretty_colors[i]) 
-        #sub.plot(k_mock, p0ks_mock[i], ls='--', c=pretty_colors[i]) 
+    fig = plt.figure(figsize=(10,5)) 
+    sub = fig.add_subplot(121)
+    sub.plot(emu.k, p0ks_gp, c='k', ls='--')  
+    sub.fill_between(emu.k, p0ks_gp - np.sqrt(vars_gp), p0ks_gp + np.sqrt(vars_gp), linewidth=0, color='k', alpha=0.25) 
+    for i in i_NN: 
+        sub.plot(emu.k, plks[i,:]) 
     # x-axis
     sub.set_xscale('log') 
     sub.set_xlim([0.01, 0.5]) 
     sub.set_xlabel('k', fontsize=25)
     # y-axis
-    #sub.set_yscale('log') 
-    sub.set_ylabel('$\Delta P(k)/P(k)$', fontsize=25)
-    f = ''.join([UT.fig_dir(), 'tests/test.HODemulator.trainGP_Pk.png']) 
-    fig.savefig(f, bbox_inches='tight') 
+    sub.set_yscale('log') 
+    sub.set_ylabel('$P(k)$', fontsize=25)
+
+    sub = fig.add_subplot(122)
+    sub.scatter(lhcube[:,0], lhcube[:,1], c='k')
+    sub.scatter([lhcube[i,0] for i in i_NN], [lhcube[i,1] for i in i_NN], c='b')
+    sub.scatter([p_hod[0]], [p_hod[1]], c='r') 
+    # x-axis
+    sub.set_xlim([emu.HODrange_min[0], emu.HODrange_max[0]]) 
+    sub.set_xlabel(emu.HOD_labels[0], fontsize=20)
+    # y-axis
+    sub.set_ylim([emu.HODrange_min[1], emu.HODrange_max[1]]) 
+    sub.set_ylabel(emu.HOD_labels[1], fontsize=20)
+    f = ''.join([UT.fig_dir(), 'tests/test.HODemulator.trainGP_PkNN.png']) 
+    fig.savefig(f)#, bbox_inches='tight') 
     return None 
 
 
@@ -102,14 +121,15 @@ def HODemulator_trainGP_Pk(mneut=0.0, nreal=1, nzbin=4, seed_hod=1, Nmesh=360, r
         p0ks_mock.append(plk['p0k']) 
     k_mock = plk['k'] 
 
+    # compare residual between the forwardmodeled P(k) to the Gaussian process
+    # with the variance predicted by GP
     fig = plt.figure() 
     sub = fig.add_subplot(111)
     pretty_colors = prettycolors() 
     for i in range(p_hods.shape[0]): 
-        sub.fill_between(emu.k, np.zeros(n_comp)-np.sqrt(var_gp[i,:]), np.zeros(n_comp)+np.sqrt(var_gp[i,:]),
+        sub.fill_between(emu.k, -np.sqrt(var_gp[i,:])/p0ks_mock[i], np.sqrt(var_gp[i,:])/p0ks_mock[i],
                 color=pretty_colors[i], edgecolor="none", alpha=0.5)  
         sub.plot(emu.k, (p0ks_gp[i,:]-p0ks_mock[i])/p0ks_mock[i], ls='-', c=pretty_colors[i]) 
-        #sub.plot(k_mock, p0ks_mock[i], ls='--', c=pretty_colors[i]) 
     # x-axis
     sub.set_xscale('log') 
     sub.set_xlim([0.01, 0.5]) 
@@ -182,4 +202,5 @@ def HODemulator_readHODLHD(HODrange='sinha2017prior_narrow', method='mdu', sampl
 
 
 if __name__=="__main__": 
-    HODemulator_trainGP_Pk()
+    HODemulator_PkNN()
+    #HODemulator_trainGP_Pk()

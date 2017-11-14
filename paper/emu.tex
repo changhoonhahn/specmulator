@@ -1,0 +1,112 @@
+\documentclass[12pt, letterpaper, preprint]{aastex}
+\usepackage{hyperref}
+\input{vc}
+
+% typesetting shih
+\linespread{1.08} % close to 10/13 spacing
+\setlength{\parindent}{1.08\baselineskip} % Bringhurst
+\setlength{\parskip}{0ex}
+\let\oldbibliography\thebibliography % killin' me.
+\renewcommand{\thebibliography}[1]{%
+  \oldbibliography{#1}%
+  \setlength{\itemsep}{0pt}%
+  \setlength{\parsep}{0pt}%
+  \setlength{\parskip}{0pt}%
+  \setlength{\bibsep}{0ex}
+  \raggedright
+}
+\setlength{\footnotesep}{0ex} % seriously?
+
+% math shih
+\newcommand{\setof}[1]{\left\{{#1}\right\}}
+\newcommand{\given}{\,|\,}
+\newcommand{\pseudo}{{\mathrm{pseudo}}}
+\newcommand{\Var}{\mathrm{Var}}
+
+% text shih
+\newcommand{\foreign}[1]{\textsl{#1}}
+\newcommand{\etal}{\foreign{et~al.}}
+\newcommand{\opcit}{\foreign{Op.~cit.}}
+\newcommand{\documentname}{\textsl{Article}}
+\newcommand{\equationname}{equation}
+\newcommand{\bitem}{\begin{itemize}}
+\newcommand{\eitem}{\end{itemize}}
+
+\begin{document}\sloppy\sloppypar\frenchspacing 
+
+\title{Prospects for Constraining $\sum m_\nu$ with Higher Order Galaxy Statistics}
+\date{\texttt{DRAFT~---~\githash~---~\gitdate~---~NOT READY FOR DISTRIBUTION}}
+\author{ChangHoon~Hahn\refstepcounter{footnote}\refstepcounter{footnote}, Zachary~Slepian, Francisco~Villaescusa-Navarro}
+\affil{Lawrence Berkeley National Laboratory, 1 Cyclotron Rd, Berkeley CA 94720, USA}
+\email{changhoon.hahn@lbl.gov}
+
+\begin{abstract}
+    abstract here 
+\end{abstract}
+
+\keywords{
+methods: statistical
+---
+galaxies: statistics
+---
+methods: data analysis
+---
+cosmological parameters
+---
+cosmology: observations
+---
+large-scale structure of universe
+}
+
+\section{Introduction}
+\bitem
+\item overview of attempts to constrain neutrino masses with galaxy 2pcf
+\eitem
+
+\section{Simulations}
+\bitem
+\item Description of Paco's simulation  
+\eitem
+
+\section{Impact of $\sum m_\nu$ on halo statistics}
+\bitem
+\item impact of $\sum m_\nu$ on the halo 3pcf
+\eitem
+
+\section{Galaxy Staticist Emulator}
+\subsection{Halo Occupation}
+\bitem
+\item explain the galaxy-halo connection
+\item halo occupation distribution  
+\eitem
+\subsection{Gaussian Process Emulator}
+\bitem
+\item explain the gaussian process emulator 
+\eitem
+
+\section{Results}
+
+\section{Discussion}
+
+\section{Summary}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Figures 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{figure}
+%\begin{center}
+%\includegraphics[width=0.9\textwidth]{figs/}
+%\caption{}
+%\label{fig:abc_demo}
+%\end{center}
+%\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Acknowledgements
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Acknowledgements}
+It's a pleasure to thank 
+
+\bibliographystyle{yahapj}
+\bibliography{specmulator}
+\end{document}
