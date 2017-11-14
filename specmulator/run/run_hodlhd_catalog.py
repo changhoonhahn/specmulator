@@ -80,7 +80,7 @@ if __name__=="__main__":
     mod = Sys.argv[1]
     if mod == 'lhd':
         # e.g. python run/run_hodlhd_catalog.py lhd 17 
-        nsample = Sys.argv[2]
+        nsample = int(Sys.argv[2])
         HOD_LHD(samples=nsample)
     elif mod in ['catalog', 'observable']: 
         # e.g. python run/run_hodlhd_catalog.py catalog 0.0 1 4 1 1 
