@@ -275,7 +275,9 @@ def LHD(dim, samples=None, method=None, niter=1000):
         except IndexError: # this is bad
             conf, remove = pyNOLH.CONF[dim]
             lhcube = pyNOLH.nolh(conf, remove)
-        if samples is not None: if samples != lhcube.shape[0]: raise ValueError
+        if samples is not None: 
+            if samples != lhcube.shape[0]: 
+                raise ValueError
         samples = lhcube.shape[0]
 
     if method in ['maximin', 'centermaximin', 'correlation']: # pyDOE implementation 

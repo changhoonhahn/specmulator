@@ -78,18 +78,18 @@ def hodlhd_observables(obvs, mneut, nreal, nzbin, seed_hod, i_p, HODrange='sinha
 
 if __name__=="__main__": 
     mod = Sys.argv[1]
+    nsample = int(Sys.argv[2])
     if mod == 'lhd':
         # e.g. python run/run_hodlhd_catalog.py lhd 17 
-        nsample = int(Sys.argv[2])
         HOD_LHD(samples=nsample)
     elif mod in ['catalog', 'observable']: 
-        # e.g. python run/run_hodlhd_catalog.py catalog 0.0 1 4 1 1 
-        # e.g. python run/run_hodlhd_catalog.py observation 0.0 1 4 1 1 plk real 
-        mneut = float(Sys.argv[2])
-        nreal = int(Sys.argv[3]) 
-        nzbin = int(Sys.argv[4]) 
-        seed_hod = int(Sys.argv[5]) 
-        i_p = int(Sys.argv[6]) 
+        # e.g. python run/run_hodlhd_catalog.py catalog 17 0.0 1 4 1 1 
+        # e.g. python run/run_hodlhd_catalog.py observation 17 0.0 1 4 1 1 plk real 
+        mneut = float(Sys.argv[3])
+        nreal = int(Sys.argv[4]) 
+        nzbin = int(Sys.argv[5]) 
+        seed_hod = int(Sys.argv[6]) 
+        i_p = int(Sys.argv[7]) 
 
         print('%f eV'%(mneut))
         print('realization %i'%(nreal))
@@ -98,14 +98,16 @@ if __name__=="__main__":
         print('%i th HOD parameter' % i_p)
     
         if mod == 'catalog': 
-            hodlhd_catalogs(mneut, nreal, nzbin, seed_hod, i_p, HODrange='sinha2017prior_narrow', method='mdu', samples=17)
+            hodlhd_catalogs(mneut, nreal, nzbin, seed_hod, i_p, 
+                    HODrange='sinha2017prior_narrow', method='mdu', samples=nsample)
         elif mod == 'observable': 
-            obvs = Sys.argv[7] 
-            space = Sys.argv[8]
+            obvs = Sys.argv[8] 
+            space = Sys.argv[9]
             if space == 'real': 
                 rsd_bool = False 
             elif space == 'z': 
                 rsd_bool = True 
 
             hodlhd_observables(obvs, mneut, nreal, nzbin, seed_hod, i_p, 
-                    HODrange='sinha2017prior_narrow', method='mdu', samples=17, Nmesh=360, rsd=rsd_bool)
+                    HODrange='sinha2017prior_narrow', method='mdu', samples=nsample, 
+                    Nmesh=360, rsd=rsd_bool)
