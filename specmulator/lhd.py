@@ -109,7 +109,7 @@ def HODLHD_NeutCatalog(mneut, nreal, nzbin, seed_hod, i_p, HODrange='sinha2017pr
         'lhd/', str(mneut), 'eV_', str(nreal), '_z', str(nzbin), '_', str(samples), 'samples/', 
         'HOD', method, '_seed', str(seed_hod), '_', str(i_p), '/']) 
     
-    assert i_p < samples
+    if isinstance(i_p, int): assert i_p < samples
         
     # read in  Neutrino halo with mneut eV, realization # nreal, at z specified by nzbin 
     halos = Dat.NeutHalos(mneut, nreal, nzbin) 
@@ -119,13 +119,13 @@ def HODLHD_NeutCatalog(mneut, nreal, nzbin, seed_hod, i_p, HODrange='sinha2017pr
         if HODrange in ['sinha2017prior', 'sinha2017prior_narrow']:  
             keylist = ['logMmin', 'sigma_logM', 'logM0', 'logM1', 'alpha'] 
         lhcube = HOD_LHD(HODrange=HODrange, samples=samples, method=method)
-
-        #for i_p in range(samples): 
+    
         print('%i of %i LHD'%(i_p+1,samples))
         p_hod = {} 
         for ik, k in enumerate(keylist): 
             p_hod[k] = lhcube[i_p,ik]
         print(p_hod)
+        
         # populate the halo catalogs using HOD 
         gals = FM.Galaxies(halos, p_hod, seed=seed_hod)  
         
@@ -285,3 +285,105 @@ def LHD(dim, samples=None, method=None, niter=1000):
     elif method == 'mdu': # multidimensional uniformity 
         lhcube = np.array(lhsMDU.sample(dim, samples)).T
     return lhcube 
+
+
+def Fiducial_Obvs(obvs, nreal, nzbin, seed_hod, mneut=0.0, Nmesh=360, rsd=True, HODrange='sinha2017prior_narrow'): 
+    ''' Calculate and save observables of the fiducial HOD catalogs
+    '''
+    if mneut != 0.0: raise ValueError("Fiducial should be calculated at m_nu=0.0eV") 
+    if rsd: str_rsd = '.zspace'
+    else: str_rsd = '.rspace'
+    folder = ''.join([UT.dat_dir(), 
+        'lhd/', str(mneut), 'eV_', str(nreal), '_z', str(nzbin), '_fiducial/', 
+        'HOD_seed', str(seed_hod), '/']) 
+
+    if obvs == 'plk': 
+        fname = ''.join([folder, 
+            'pk.menut', str(mneut), '.nreal', str(nreal), '.nzbin', str(nzbin), str_rsd, '.', str(Nmesh), '.nbkt.dat'])
+
+    if os.path.isfile(fname): 
+        print('--- reading from --- \n %s' % fname) 
+        # read observalbe from file 
+        k, p0k, p2k, p4k = np.loadtxt(fname, skiprows=4, unpack=True, usecols=[0,1,2,3])
+        obvs = {'k': k, 'p0k': p0k, 'p2k': p2k, 'p4k':p4k} 
+
+        # readin shot-noise from header 
+        f = open(fname, 'r') 
+        _ = f.readline() 
+        str_sn = f.readline() 
+        obvs['shotnoise'] = float(str_sn.strip().split('shotnoise')[-1])
+    else: 
+        gals = Fiducial_Catalog(nreal, nzbin, seed_hod, mneut=mneut, HODrange=HODrange)
+
+        if obvs == 'plk': # power spectrum multipole 
+            plk = FM.Observables(gals, observable='plk', rsd=rsd, Nmesh=Nmesh)
+            
+            # save to file 
+            f = open(fname, 'w')
+            f.write("### header ### \n")
+            f.write("# shotnoise %f \n" % plk['shotnoise'])
+            f.write("# columns : k , P0, P2, P4 \n")
+            f.write('### header ### \n') 
+
+            for ik in range(len(plk['k'])): 
+                f.write("%f \t %f \t %f \t %f" % (plk['k'][ik], plk['p0k'][ik], plk['p2k'][ik], plk['p4k'][ik]))
+                f.write("\n") 
+            f.close() 
+            obvs = plk
+        else: 
+            raise NotImplementedError('only Plk implemented') 
+    return obvs
+
+
+def Fiducial_Catalog(nreal, nzbin, seed_hod, mneut=0.0, HODrange='sinha2017prior_narrow'): 
+    ''' Generate fiducial HOD catalogs from specified m_nu = 0.0eV halo catalog 
+
+    parameters
+    ----------
+    mneut : float, 
+        total neutrino mass 
+
+    nreal : int,
+        realization number 
+
+    nzbin : int, 
+        integer specifying the redshift of the snapshot. 
+        nzbin = 0 --> z=3
+        nzbin = 1 --> z=2
+        nzbin = 2 --> z=1
+        nzbin = 3 --> z=0.5
+        nzbin = 4 --> z=0
+    
+    seed_hod : int, 
+        random seed for the HOD 
+    '''
+    if mneut != 0.0: raise ValueError("Fiducial should be calculated at m_nu=0.0eV") 
+    folder = ''.join([UT.dat_dir(), 
+        'lhd/', str(mneut), 'eV_', str(nreal), '_z', str(nzbin), '_fiducial/', 
+        'HOD_seed', str(seed_hod), '/']) 
+    
+    # read in  Neutrino halo with mneut eV, realization # nreal, at z specified by nzbin 
+    halos = Dat.NeutHalos(mneut, nreal, nzbin) 
+
+    if not np.all([os.path.exists(folder+subfold+'/') for subfold in ['Position', 'Velocity', 'RSDPosition']]):   
+        # fiducial HOD catalog
+        if HODrange in ['sinha2017prior', 'sinha2017prior_narrow']:  
+            keylist = ['logMmin', 'sigma_logM', 'logM0', 'logM1', 'alpha'] 
+            
+            p_hod = {'logMmin': 11.60, 'sigma_logM': 0.26, 'logM0': 11.49, 'logM1': 12.83, 'alpha': 1.02}
+        # populate the halo catalogs using HOD 
+        gals = FM.Galaxies(halos, p_hod, seed=seed_hod)  
+        
+        # RSD position (hardcoded in the z direction) 
+        gals['RSDPosition'] = FM.RSD(gals, LOS=[0,0,1]) 
+
+        parent_dir = '/'.join(folder[:-1].split('/')[:-1])+'/'
+        if not os.path.exists(parent_dir): # make directory
+            os.mkdir(parent_dir) 
+        # save to file 
+        gals.save(folder, ('Position', 'Velocity', 'RSDPosition'))
+    else:
+        # read from file 
+        gals = NBlab.BigFileCatalog(folder, header='Header')
+        gals.cosmo = halos.cosmo # save cosmology 
+    return gals 

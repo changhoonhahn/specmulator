@@ -89,17 +89,23 @@ if __name__=="__main__":
         nreal = int(Sys.argv[4]) 
         nzbin = int(Sys.argv[5]) 
         seed_hod = int(Sys.argv[6]) 
-        i_p = int(Sys.argv[7]) 
 
         print('%f eV'%(mneut))
         print('realization %i'%(nreal))
         print('nzbin %i'%(nzbin))
         print('random seed %i ' % seed_hod)
-        print('%i th HOD parameter' % i_p)
+        
+        i_p = Sys.argv[7]
+        if i_p != 'fid': 
+            i_p = int(i_p) 
+            print('%i th HOD parameter' % i_p)
     
         if mod == 'catalog': 
-            hodlhd_catalogs(mneut, nreal, nzbin, seed_hod, i_p, 
-                    HODrange='sinha2017prior_narrow', method='mdu', samples=nsample)
+            if i_p != 'fid': 
+                hodlhd_catalogs(mneut, nreal, nzbin, seed_hod, i_p, 
+                        HODrange='sinha2017prior_narrow', method='mdu', samples=nsample)
+            else: 
+                _ = lhd.Fiducial_Catalog(nreal, nzbin, seed_hod, mneut=mneut) 
         elif mod == 'observable': 
             obvs = Sys.argv[8] 
             space = Sys.argv[9]
@@ -107,7 +113,10 @@ if __name__=="__main__":
                 rsd_bool = False 
             elif space == 'z': 
                 rsd_bool = True 
-
-            hodlhd_observables(obvs, mneut, nreal, nzbin, seed_hod, i_p, 
-                    HODrange='sinha2017prior_narrow', method='mdu', samples=nsample, 
-                    Nmesh=360, rsd=rsd_bool)
+            if i_p != 'fid': 
+                hodlhd_observables(obvs, mneut, nreal, nzbin, seed_hod, i_p, 
+                        HODrange='sinha2017prior_narrow', method='mdu', samples=nsample, 
+                        Nmesh=360, rsd=rsd_bool)
+            else: 
+                lhd.Fiducial_Obvs(obvs, nreal, nzbin, seed_hod, mneut=mneut, 
+                        Nmesh=360, rsd=rsd_bool)
