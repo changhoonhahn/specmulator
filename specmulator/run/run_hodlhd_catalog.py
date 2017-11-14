@@ -79,11 +79,12 @@ def hodlhd_observables(obvs, mneut, nreal, nzbin, seed_hod, i_p, HODrange='sinha
 if __name__=="__main__": 
     mod = Sys.argv[1]
     if mod == 'lhd':
-        # e.g. python run/run_hodlhd_catalog.py lhd
-        HOD_LHD()
+        # e.g. python run/run_hodlhd_catalog.py lhd 17 
+        nsample = Sys.argv[2]
+        HOD_LHD(samples=nsample)
     elif mod in ['catalog', 'observable']: 
-        # e.g. python run/run_hodlhd_catalog.py catalog 0.0 1 4 1
-        # e.g. python run/run_hodlhd_catalog.py observation 0.0 1 4 1 plk
+        # e.g. python run/run_hodlhd_catalog.py catalog 0.0 1 4 1 1 
+        # e.g. python run/run_hodlhd_catalog.py observation 0.0 1 4 1 1 plk real 
         mneut = float(Sys.argv[2])
         nreal = int(Sys.argv[3]) 
         nzbin = int(Sys.argv[4]) 
