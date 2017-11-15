@@ -105,7 +105,7 @@ if __name__=="__main__":
                 hodlhd_catalogs(mneut, nreal, nzbin, seed_hod, i_p, 
                         HODrange='sinha2017prior_narrow', method='mdu', samples=nsample)
             else: 
-                _ = lhd.Fiducial_Catalog(nreal, nzbin, seed_hod, mneut=mneut) 
+                _ = Dat.Fiducial_Catalog(nreal, nzbin, seed_hod, mneut=mneut) 
         elif mod == 'observable': 
             obvs = Sys.argv[8] 
             space = Sys.argv[9]
@@ -118,5 +118,5 @@ if __name__=="__main__":
                         HODrange='sinha2017prior_narrow', method='mdu', samples=nsample, 
                         Nmesh=360, rsd=rsd_bool)
             else: 
-                lhd.Fiducial_Obvs(obvs, nreal, nzbin, seed_hod, mneut=mneut, 
+                Dat.Fiducial_Obvs(obvs, nreal, nzbin, seed_hod, mneut=mneut, 
                         Nmesh=360, rsd=rsd_bool)

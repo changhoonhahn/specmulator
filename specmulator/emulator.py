@@ -45,7 +45,7 @@ class HODemulator(object):
         for i in range(Y.shape[1]): # optimize a GP for each component 
             self._y = Y[:,i]
             
-            kernel = 1.0 * Kerns.ExpKernel(lguess, ndim=len(lguess), axes=range(X.shape[1])) #
+            kernel = 10.0 * Kerns.ExpKernel(lguess, ndim=len(lguess), axes=range(X.shape[1])) #
             _gp = George.GP(kernel, mean=np.average(self._y, axis=0)) 
             _gp.compute(self._x)
             # optimize hyperparameters of the kernel
@@ -122,7 +122,10 @@ class HODemulator(object):
                 plks.append(plk_i['p'+str(ell)+'k'][klim])
             else:
                 plks.append(plk_i['p'+str(ell)+'k'])
-        self.k = plk_i['k'] 
+        if krange is not None: 
+            self.k = plk_i['k'][klim]
+        else:
+            self.k = plk_i['k']
         return np.array(plks) 
     
     def _nll(self, p, _gp) :

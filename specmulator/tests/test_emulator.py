@@ -1,5 +1,4 @@
 import numpy as np 
-
 import env
 import util as UT 
 import data as Dat
@@ -24,7 +23,7 @@ mpl.rcParams['legend.frameon'] = False
 
 
 def HODemulator_PkNN(mneut=0.0, nreal=1, nzbin=4, seed_hod=1, Nmesh=360, rsd=True, 
-        HODrange='sinha2017prior_narrow', method='mdu', samples=17):
+        HODrange='sinha2017prior_narrow', method='mdu', samples=17, krange=[0.01,0.5]):
     ''' Test simple gaussian process emulator by randomly 
     choosing an HOD parameter then comparing it to the observables
     of HOD parameters near it 
@@ -32,7 +31,14 @@ def HODemulator_PkNN(mneut=0.0, nreal=1, nzbin=4, seed_hod=1, Nmesh=360, rsd=Tru
     emu = Emu.HODemulator() 
     lhcube = emu.read_HODLHD(HODrange=HODrange, method=method, samples=samples)
     plks = emu.read_NeutObvs('p0k', mneut, nreal, nzbin, seed_hod, Nmesh=Nmesh, rsd=rsd)
-    emu.trainGP(lhcube, plks) # train GP 
+
+    # compress data with PCA 
+    n_pca = 21  # number of PCA components 
+    pca_fid = Comp.PCA_fid(n_pca, mneut=0.0, nreal=nreal, nzbin=nzbin, obvs='plk', poles=[0], 
+            Nmesh=Nmesh, rsd=rsd, HODrange=HODrange, krange=krange)
+    plks_pca = pca_fid.transform(plks)
+
+    emu.trainGP(lhcube, plks_pca) # train GP 
     n_comp = len(emu.GPs) # number of GPs 
     print("%i GPs" % n_comp)
 
@@ -41,13 +47,15 @@ def HODemulator_PkNN(mneut=0.0, nreal=1, nzbin=4, seed_hod=1, Nmesh=360, rsd=Tru
     for ik, k in enumerate(emu.HOD_params): 
         p_hod[ik] = 0.5*(emu.HODrange_max[ik] + emu.HODrange_min[ik]) + \
                 np.random.uniform(-0.33, 0.33) * (emu.HODrange_max[ik] - emu.HODrange_min[ik])
-
-    p0ks_gp = np.zeros(n_comp)
-    vars_gp = np.zeros(n_comp)
+    
+    p0ks_gp_pca = np.zeros(plks_pca.shape[1])
+    vars_gp_pca = np.zeros(n_comp)
     for i in range(n_comp): 
-        mu, var = emu.GPs[i].predict(emu.obvs[:,i], np.array((p_hod,)))
-        p0ks_gp[i] = mu 
-        vars_gp[i] = var 
+        mu, var = emu.GPs[i].predict(plks_pca[:,i], np.array((p_hod,)))
+        p0ks_gp_pca[i] = mu
+        vars_gp_pca[i] = np.diag(var)
+    
+    p0ks_gp = pca_fid.inverse_transform(p0ks_gp_pca)
 
     # select parameters in lhcube "closest" to 
     # the chosen parameter above
@@ -58,7 +66,10 @@ def HODemulator_PkNN(mneut=0.0, nreal=1, nzbin=4, seed_hod=1, Nmesh=360, rsd=Tru
     fig = plt.figure(figsize=(10,5)) 
     sub = fig.add_subplot(121)
     sub.plot(emu.k, p0ks_gp, c='k', ls='--')  
-    sub.fill_between(emu.k, p0ks_gp - np.sqrt(vars_gp), p0ks_gp + np.sqrt(vars_gp), linewidth=0, color='k', alpha=0.25) 
+    sub.fill_between(emu.k, 
+            pca_fid.inverse_transform(p0ks_gp_pca - np.sqrt(vars_gp_pca)), 
+            pca_fid.inverse_transform(p0ks_gp_pca + np.sqrt(vars_gp_pca)), 
+            linewidth=0, color='k', alpha=0.25) 
     for i in i_NN: 
         sub.plot(emu.k, plks[i,:]) 
     # x-axis
@@ -85,7 +96,7 @@ def HODemulator_PkNN(mneut=0.0, nreal=1, nzbin=4, seed_hod=1, Nmesh=360, rsd=Tru
 
 
 def HODemulator_trainGP_Pk(mneut=0.0, nreal=1, nzbin=4, seed_hod=1, Nmesh=360, rsd=True, 
-        HODrange='sinha2017prior_narrow', method='mdu', samples=17):
+        HODrange='sinha2017prior_narrow', method='mdu', samples=17, krange=[0.01, 0.5]):
     ''' Test simple gaussian process emulator by randomly 
     sampling HOD parameter space and compare it to GP predictions 
     '''
@@ -96,7 +107,7 @@ def HODemulator_trainGP_Pk(mneut=0.0, nreal=1, nzbin=4, seed_hod=1, Nmesh=360, r
     # compress data with PCA 
     n_pca = 21  # number of PCA components 
     pca_fid = Comp.PCA_fid(n_pca, mneut=0.0, nreal=nreal, nzbin=nzbin, obvs='plk', poles=[0], 
-            Nmesh=Nmesh, rsd=rsd, HODrange=HODrange, krange=[0.01,0.5])
+            Nmesh=Nmesh, rsd=rsd, HODrange=HODrange, krange=krange)
     plks_pca = pca_fid.transform(plks)
 
     emu.trainGP(lhcube, plks_pca) # train GP 
@@ -109,17 +120,17 @@ def HODemulator_trainGP_Pk(mneut=0.0, nreal=1, nzbin=4, seed_hod=1, Nmesh=360, r
         for ik, k in enumerate(emu.HOD_params): 
             p_hods[i,ik] = 0.5*(emu.HODrange_max[ik] + emu.HODrange_min[ik]) + \
                     np.random.uniform(-0.33, 0.33) * (emu.HODrange_max[ik] - emu.HODrange_min[ik])
-
-    p0ks_gp_pca = []
+    print plks_pca.shape
+    p0ks_gp_pca = np.zeros((p_hods.shape[0], plks_pca.shape[1]))
     #var_gp = np.zeros((p_hods.shape[0], n_comp))
-    for i in range(n_comp): 
+    for i in range(plks_pca.shape[1]): 
         mu, var = emu.GPs[i].predict(plks_pca[:,i], p_hods)
-        p0ks_gp_pca.append(mu)
+        p0ks_gp_pca[:,i] = mu
         #var_gp[:,i] = np.diag(var)
     
     p0ks_gp = np.zeros((p_hods.shape[0], plks.shape[1]))
     for i in range(p_hods.shape[0]): 
-        p0ks_gp[i,:] = pca_fid.inverse_transform(p0ks_gp[i])
+        p0ks_gp[i,:] = pca_fid.inverse_transform(p0ks_gp_pca[i,:])
     
     p0ks_mock = []
     halos = Dat.NeutHalos(mneut, nreal, nzbin) 
@@ -129,7 +140,7 @@ def HODemulator_trainGP_Pk(mneut=0.0, nreal=1, nzbin=4, seed_hod=1, Nmesh=360, r
         for t, k in zip(p_hods[i,:], emu.HOD_params): p_hod_i[k] = t 
         gals = FM.Galaxies(halos, p_hod_i, seed=seed_hod)  # populate the halo catalogs using HOD 
         gals['RSDPosition'] = FM.RSD(gals, LOS=[0,0,1]) # RSD position (hardcoded in the z direction) 
-        plk = FM.Observables(gals, observable='plk', rsd=rsd, Nmesh=Nmesh)
+        plk = FM.Observables(gals, observable='plk', rsd=rsd, Nmesh=Nmesh, krange=krange)
         p0ks_mock.append(plk['p0k']) 
     k_mock = plk['k'] 
 
@@ -143,7 +154,7 @@ def HODemulator_trainGP_Pk(mneut=0.0, nreal=1, nzbin=4, seed_hod=1, Nmesh=360, r
         sub.plot(emu.k, (p0ks_gp[i,:]-p0ks_mock[i])/p0ks_mock[i], ls='-', c=pretty_colors[i]) 
     # x-axis
     sub.set_xscale('log') 
-    sub.set_xlim([0.01, 0.5]) 
+    sub.set_xlim(krange) 
     sub.set_xlabel('k', fontsize=25)
     # y-axis
     #sub.set_yscale('log') 
@@ -213,5 +224,5 @@ def HODemulator_readHODLHD(HODrange='sinha2017prior_narrow', method='mdu', sampl
 
 
 if __name__=="__main__": 
-    #HODemulator_PkNN()
-    HODemulator_trainGP_Pk()
+    HODemulator_PkNN()
+    #HODemulator_trainGP_Pk()

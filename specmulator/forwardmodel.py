@@ -9,7 +9,7 @@ from pmesh.pm import ParticleMesh
 from scipy.interpolate import InterpolatedUnivariateSpline as interpolate
 
 
-def Observables(cat, observable='plk', rsd=False, Nmesh=256): 
+def Observables(cat, observable='plk', rsd=False, Nmesh=256, krange=None): 
     ''' Given galaxy/halo catalog, measure specified observables 
     (e.g. powerspectrum multipoles). 
     '''
@@ -20,9 +20,14 @@ def Observables(cat, observable='plk', rsd=False, Nmesh=256):
         mesh = cat.to_mesh(window='tsc', Nmesh=Nmesh, compensated=True, position=str_pos)
         r = NBlab.FFTPower(mesh, mode='2d', dk=0.005, kmin=0.005, Nmu=5, los=[0,0,1], poles=[0,2,4])
         poles = r.poles
-        plk = {'k': poles['k']} 
+        if krange is None: 
+            klim = np.ones(len(poles['k'])).astype('bool') 
+        else: 
+            klim = (poles['k'] > krange[0]) & (poles['k'] < krange[1])
+
+        plk = {'k': poles['k'][klim]} 
         for ell in [0, 2, 4]:
-            P = poles['power_%d' %ell].real
+            P = (poles['power_%d' %ell].real)[klim]
             if ell == 0: 
                 P = P - poles.attrs['shotnoise'] # subtract shotnoise from monopole 
             plk['p%dk' %ell] = P 
