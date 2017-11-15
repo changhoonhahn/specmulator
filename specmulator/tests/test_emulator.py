@@ -4,6 +4,7 @@ import env
 import util as UT 
 import data as Dat
 import emulator as Emu
+import compress as Comp
 import forwardmodel as FM 
 
 from ChangTools.plotting import prettycolors
@@ -91,7 +92,14 @@ def HODemulator_trainGP_Pk(mneut=0.0, nreal=1, nzbin=4, seed_hod=1, Nmesh=360, r
     emu = Emu.HODemulator() 
     lhcube = emu.read_HODLHD(HODrange=HODrange, method=method, samples=samples)
     plks = emu.read_NeutObvs('p0k', mneut, nreal, nzbin, seed_hod, Nmesh=Nmesh, rsd=rsd)
-    emu.trainGP(lhcube, plks) # train GP 
+
+    # compress data with PCA 
+    n_pca = 21  # number of PCA components 
+    pca_fid = Comp.PCA_fid(n_pca, mneut=0.0, nreal=nreal, nzbin=nzbin, obvs='plk', poles=[0], 
+            Nmesh=Nmesh, rsd=rsd, HODrange=HODrange, krange=[0.01,0.5])
+    plks_pca = pca_fid.transform(plks)
+
+    emu.trainGP(lhcube, plks_pca) # train GP 
     n_comp = len(emu.GPs) # number of GPs 
     print("%i GPs" % n_comp)
 
@@ -102,12 +110,16 @@ def HODemulator_trainGP_Pk(mneut=0.0, nreal=1, nzbin=4, seed_hod=1, Nmesh=360, r
             p_hods[i,ik] = 0.5*(emu.HODrange_max[ik] + emu.HODrange_min[ik]) + \
                     np.random.uniform(-0.33, 0.33) * (emu.HODrange_max[ik] - emu.HODrange_min[ik])
 
-    p0ks_gp = np.zeros((p_hods.shape[0], n_comp))
-    var_gp = np.zeros((p_hods.shape[0], n_comp))
+    p0ks_gp_pca = []
+    #var_gp = np.zeros((p_hods.shape[0], n_comp))
     for i in range(n_comp): 
-        mu, var = emu.GPs[i].predict(emu.obvs[:,i], p_hods)
-        p0ks_gp[:,i] = mu 
-        var_gp[:,i] = np.diag(var)
+        mu, var = emu.GPs[i].predict(plks_pca[:,i], p_hods)
+        p0ks_gp_pca.append(mu)
+        #var_gp[:,i] = np.diag(var)
+    
+    p0ks_gp = np.zeros((p_hods.shape[0], plks.shape[1]))
+    for i in range(p_hods.shape[0]): 
+        p0ks_gp[i,:] = pca_fid.inverse_transform(p0ks_gp[i])
     
     p0ks_mock = []
     halos = Dat.NeutHalos(mneut, nreal, nzbin) 
@@ -127,8 +139,7 @@ def HODemulator_trainGP_Pk(mneut=0.0, nreal=1, nzbin=4, seed_hod=1, Nmesh=360, r
     sub = fig.add_subplot(111)
     pretty_colors = prettycolors() 
     for i in range(p_hods.shape[0]): 
-        sub.fill_between(emu.k, -np.sqrt(var_gp[i,:])/p0ks_mock[i], np.sqrt(var_gp[i,:])/p0ks_mock[i],
-                color=pretty_colors[i], edgecolor="none", alpha=0.5)  
+        #sub.fill_between(emu.k, -np.sqrt(var_gp[i,:])/p0ks_mock[i], np.sqrt(var_gp[i,:])/p0ks_mock[i], color=pretty_colors[i], edgecolor="none", alpha=0.5)  
         sub.plot(emu.k, (p0ks_gp[i,:]-p0ks_mock[i])/p0ks_mock[i], ls='-', c=pretty_colors[i]) 
     # x-axis
     sub.set_xscale('log') 
@@ -202,5 +213,5 @@ def HODemulator_readHODLHD(HODrange='sinha2017prior_narrow', method='mdu', sampl
 
 
 if __name__=="__main__": 
-    HODemulator_PkNN()
-    #HODemulator_trainGP_Pk()
+    #HODemulator_PkNN()
+    HODemulator_trainGP_Pk()

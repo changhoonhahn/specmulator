@@ -88,7 +88,8 @@ class HODemulator(object):
         self.lhcube = lhcube 
         return lhcube 
     
-    def read_NeutObvs(self, obvs, mneut, nreal, nzbin, seed_hod, Nmesh=360, rsd=True): 
+    def read_NeutObvs(self, obvs, mneut, nreal, nzbin, seed_hod, Nmesh=360, rsd=True, 
+            krange=[0.01, 0.5]): 
         ''' Read in observables( theta_HODLHD ) 
         ** need more descriptions ** 
         '''
@@ -100,13 +101,14 @@ class HODemulator(object):
         if obvs == 'p0k':  # powerspectrum monopole 
             self.obvs = self._HODLHD_Pks(0, mneut, nreal, nzbin, seed_hod, 
                     HODrange=self.HODrange, method=self.LHDmethod, samples=self.LHDsamples, 
-                    Nmesh=Nmesh, rsd=rsd)
+                    Nmesh=Nmesh, rsd=rsd, krange=krange)
         else: 
             raise NotImplementedError
         return self.obvs
      
     def _HODLHD_Pks(self, ell, mneut, nreal, nzbin, seed_hod, 
-            HODrange='sinha2017prior_narrow', method='nohl', samples=17, Nmesh=360, rsd=True): 
+            HODrange='sinha2017prior_narrow', method='nohl', samples=17, Nmesh=360, rsd=True, 
+            krange=None): 
         ''' Read in powerspectrum measurements for HOD LHD 
         '''
         if ell not in [0,2,4]: 
@@ -115,7 +117,11 @@ class HODemulator(object):
         for i_p in range(samples): 
             plk_i = lhd.HODLHD_NeutObvs('plk', mneut, nreal, nzbin, seed_hod, i_p,
                     HODrange=HODrange, method=method, samples=samples, Nmesh=Nmesh, rsd=rsd)
-            plks.append(plk_i['p'+str(ell)+'k'])
+            if krange is not None: 
+                klim = np.where((plk_i['k'] > krange[0]) & (plk_i['k'] < krange[1]))
+                plks.append(plk_i['p'+str(ell)+'k'][klim])
+            else:
+                plks.append(plk_i['p'+str(ell)+'k'])
         self.k = plk_i['k'] 
         return np.array(plks) 
     
