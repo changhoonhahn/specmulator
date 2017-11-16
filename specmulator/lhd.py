@@ -22,7 +22,7 @@ except ModuleNotFoundError:
 
 
 def HODLHD_NeutObvs(obvs, mneut, nreal, nzbin, seed_hod, i_p, HODrange='sinha2017prior_narrow', method='nohl', samples=17, 
-        Nmesh=360, rsd=True): 
+        Nmesh=360, rsd=True, make=False): 
     ''' Calculate and save observables of the HOD LHD catalogs
     '''
     if rsd: str_rsd = '.zspace'
@@ -46,6 +46,8 @@ def HODLHD_NeutObvs(obvs, mneut, nreal, nzbin, seed_hod, i_p, HODrange='sinha201
         str_sn = f.readline() 
         obvs['shotnoise'] = float(str_sn.strip().split('shotnoise')[-1])
     else: 
+        if not make: 
+            raise ValueError
         gals = HODLHD_NeutCatalog(mneut, nreal, nzbin, seed_hod, i_p, 
                 HODrange=HODrange, method=method, samples=samples)
 

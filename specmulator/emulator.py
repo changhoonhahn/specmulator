@@ -23,7 +23,7 @@ class HODemulator(object):
         self.nreal = None 
         self.nzbin = None
     
-    def trainGP(self, X, Y):   
+    def trainGP(self, X, Y, yerr=None):   
         ''' Train Gaussian Process for each component of observable Y 
 
         Parameters
@@ -45,9 +45,12 @@ class HODemulator(object):
         for i in range(Y.shape[1]): # optimize a GP for each component 
             self._y = Y[:,i]
             
-            kernel = 10.0 * Kerns.ExpKernel(lguess, ndim=len(lguess), axes=range(X.shape[1])) #
+            kernel = np.var(self._y) * Kerns.ExpSquaredKernel(lguess, ndim=len(lguess), axes=range(X.shape[1])) #
             _gp = George.GP(kernel, mean=np.average(self._y, axis=0)) 
-            _gp.compute(self._x)
+            if yerr is None: 
+                _gp.compute(self._x)
+            else: 
+                _gp.compute(self._x, yerr=yerr[i])
             # optimize hyperparameters of the kernel
             p0 = _gp.get_parameter_vector()
             results = op.minimize(self._nll, p0, args=(_gp), jac=self._grad_nll, method="L-BFGS-B")
@@ -115,8 +118,11 @@ class HODemulator(object):
             raise ValueError("only monopole, quadrupole, and hexadecapole") 
         plks = [] 
         for i_p in range(samples): 
-            plk_i = lhd.HODLHD_NeutObvs('plk', mneut, nreal, nzbin, seed_hod, i_p,
-                    HODrange=HODrange, method=method, samples=samples, Nmesh=Nmesh, rsd=rsd)
+            try: 
+                plk_i = lhd.HODLHD_NeutObvs('plk', mneut, nreal, nzbin, seed_hod, i_p,
+                        HODrange=HODrange, method=method, samples=samples, Nmesh=Nmesh, rsd=rsd, make=False)
+            except ValueError: 
+                continue 
             if krange is not None: 
                 klim = np.where((plk_i['k'] > krange[0]) & (plk_i['k'] < krange[1]))
                 plks.append(plk_i['p'+str(ell)+'k'][klim])
