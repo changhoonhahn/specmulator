@@ -23,25 +23,6 @@ def PCA_fid(n_comp, mneut=0.0, nreal=1, nzbin=4, obvs='plk', poles=[0], Nmesh=36
     return pca_fid
 
 
-def X_fid(nreal, nzbin, obvs='plk', poles=[0], mneut=0.0, Nmesh=360, rsd=True, 
-        HODrange='sinha2017prior_narrow', krange=[0.01, 0.5]):
-    ''' Import observable data vectors from fiducial mock catalog used for 
-    covariance matrix estimation. 
-    '''
-    X = [] 
-    for seed_hod in range(1,101): 
-        obv_data = Dat.Fiducial_Obvs(obvs, nreal, nzbin, seed_hod, mneut=mneut, 
-                Nmesh=Nmesh, rsd=rsd, HODrange=HODrange)
-        if obvs == 'plk': 
-            klim = np.where((obv_data['k'] > krange[0]) & (obv_data['k'] < krange[1]))
-            pk_i = [] 
-            for pole in poles: 
-                pk_i.append(obv_data['p'+str(pole)+'k'][klim]) 
-            X.append(np.concatenate(pk_i))
-        else: 
-            raise ValueError
-    return np.array(X) 
-    
 
 def PCA_decomp(X, n_comp=None, exp_var=False):
     ''' PCA decomposition using sklearn's SVD 

@@ -1,5 +1,8 @@
 '''
 
+methods for forward modeling from theta
+F(theta)
+
 
 '''
 import bigfile as BF 

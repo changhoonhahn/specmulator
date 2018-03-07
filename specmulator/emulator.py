@@ -92,7 +92,7 @@ class HODemulator(object):
         return lhcube 
     
     def read_NeutObvs(self, obvs, mneut, nreal, nzbin, seed_hod, Nmesh=360, rsd=True, 
-            krange=[0.01, 0.5]): 
+            krange=[0.01, 0.5], silent=False): 
         ''' Read in observables( theta_HODLHD ) 
         ** need more descriptions ** 
         '''
@@ -104,14 +104,14 @@ class HODemulator(object):
         if obvs == 'p0k':  # powerspectrum monopole 
             self.obvs = self._HODLHD_Pks(0, mneut, nreal, nzbin, seed_hod, 
                     HODrange=self.HODrange, method=self.LHDmethod, samples=self.LHDsamples, 
-                    Nmesh=Nmesh, rsd=rsd, krange=krange)
+                    Nmesh=Nmesh, rsd=rsd, krange=krange, silent=silent)
         else: 
             raise NotImplementedError
         return self.obvs
      
     def _HODLHD_Pks(self, ell, mneut, nreal, nzbin, seed_hod, 
             HODrange='sinha2017prior_narrow', method='nohl', samples=17, Nmesh=360, rsd=True, 
-            krange=None): 
+            krange=None, silent=False): 
         ''' Read in powerspectrum measurements for HOD LHD 
         '''
         if ell not in [0,2,4]: 
@@ -120,7 +120,8 @@ class HODemulator(object):
         for i_p in range(samples): 
             try: 
                 plk_i = lhd.HODLHD_NeutObvs('plk', mneut, nreal, nzbin, seed_hod, i_p,
-                        HODrange=HODrange, method=method, samples=samples, Nmesh=Nmesh, rsd=rsd, make=False)
+                        HODrange=HODrange, method=method, samples=samples, Nmesh=Nmesh, 
+                        rsd=rsd, make=False, silent=silent)
             except ValueError: 
                 continue 
             if krange is not None: 
@@ -145,4 +146,3 @@ class HODemulator(object):
         # grad log likelihood
         _gp.set_parameter_vector(p)
         return -_gp.grad_lnlikelihood(self._y, quiet=True)
-

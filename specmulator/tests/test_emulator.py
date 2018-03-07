@@ -173,8 +173,10 @@ def HODemulator_PkNN(mneut=0.0, nreal=1, nzbin=4, seed_hod=1, Nmesh=360, rsd=Tru
     '''
     emu = Emu.HODemulator() 
     lhcube = emu.read_HODLHD(HODrange=HODrange, method=method, samples=samples)
-    plks = emu.read_NeutObvs('p0k', mneut, nreal, nzbin, seed_hod, Nmesh=Nmesh, rsd=rsd, krange=krange)
-    X_fid = Comp.X_fid(nreal, nzbin, obvs='plk', poles=[0], mneut=0.0, Nmesh=Nmesh, rsd=rsd, HODrange=HODrange, krange=krange)
+    plks = emu.read_NeutObvs('p0k', mneut, nreal, nzbin, seed_hod, 
+            Nmesh=Nmesh, rsd=rsd, krange=krange)
+    X_fid = Comp.X_fid(nreal, nzbin, obvs='plk', poles=[0], mneut=mneut, 
+            Nmesh=Nmesh, rsd=rsd, HODrange=HODrange, krange=krange)
     yerr = np.diag(np.cov(X_fid.T))
     emu.trainGP(lhcube, plks, yerr=yerr) # train GP 
     n_comp = len(emu.GPs) # number of GPs 
@@ -199,32 +201,32 @@ def HODemulator_PkNN(mneut=0.0, nreal=1, nzbin=4, seed_hod=1, Nmesh=360, rsd=Tru
     i_NN = i_rhosort[:5]  # 5 nearest HOD LHD points 
     
     fig = plt.figure(figsize=(10,5)) 
-    sub = fig.add_subplot(121)
-    sub.plot(emu.k, p0ks_gp, c='k', ls='--')  
+    sub1 = fig.add_subplot(121)
+    sub1.plot(emu.k, p0ks_gp, c='k', ls='--')  
     #sub.fill_between(emu.k, 
     #        p0ks_gp - np.sqrt(vars_gp), 
     #        p0ks_gp + np.sqrt(vars_gp), 
     #        linewidth=0, color='k', alpha=0.25) 
-    for i in i_NN: 
-        sub.plot(emu.k, plks[i,:])
     # x-axis
-    sub.set_xscale('log') 
-    sub.set_xlim([0.01, 0.5]) 
-    sub.set_xlabel('k', fontsize=25)
+    sub1.set_xscale('log') 
+    sub1.set_xlim([0.01, 0.5]) 
+    sub1.set_xlabel('k', fontsize=25)
     # y-axis
-    sub.set_yscale('log') 
-    sub.set_ylabel('$P(k)$', fontsize=25)
+    sub1.set_yscale('log') 
+    sub1.set_ylabel('$P(k)$', fontsize=25)
 
-    sub = fig.add_subplot(122)
-    sub.scatter(lhcube[:,0], lhcube[:,1], c='k')
-    sub.scatter([lhcube[i,0] for i in i_NN], [lhcube[i,1] for i in i_NN], c='b')
-    sub.scatter([p_hod[0]], [p_hod[1]], c='r') 
+    sub2 = fig.add_subplot(122)
+    sub2.scatter(lhcube[:,0], lhcube[:,1], c='k')
+    for ii, i in enumerate(i_NN): 
+        sub1.plot(emu.k, plks[i,:], c='C'+str(ii))
+        sub2.scatter([lhcube[i,0]], [lhcube[i,1]], c='C'+str(ii))
+    sub2.scatter([p_hod[0]], [p_hod[1]], c='r') 
     # x-axis
-    sub.set_xlim([emu.HODrange_min[0], emu.HODrange_max[0]]) 
-    sub.set_xlabel(emu.HOD_labels[0], fontsize=20)
+    sub2.set_xlim([emu.HODrange_min[0], emu.HODrange_max[0]]) 
+    sub2.set_xlabel(emu.HOD_labels[0], fontsize=20)
     # y-axis
-    sub.set_ylim([emu.HODrange_min[1], emu.HODrange_max[1]]) 
-    sub.set_ylabel(emu.HOD_labels[1], fontsize=20)
+    sub2.set_ylim([emu.HODrange_min[1], emu.HODrange_max[1]]) 
+    sub2.set_ylabel(emu.HOD_labels[1], fontsize=20)
     f = ''.join([UT.fig_dir(), 'tests/test.HODemulator.trainGP_PkNN.png']) 
     fig.savefig(f)#, bbox_inches='tight') 
     return None 
@@ -237,10 +239,15 @@ def HODemulator_trainGP_Pk(mneut=0.0, nreal=1, nzbin=4, seed_hod=1, Nmesh=360, r
     '''
     emu = Emu.HODemulator() 
     lhcube = emu.read_HODLHD(HODrange=HODrange, method=method, samples=samples)
-    plks = emu.read_NeutObvs('p0k', mneut, nreal, nzbin, seed_hod, Nmesh=Nmesh, rsd=rsd, krange=krange)
-    X_fid = Comp.X_fid(nreal, nzbin, obvs='plk', poles=[0], mneut=0.0, Nmesh=Nmesh, rsd=rsd, HODrange=HODrange, krange=krange)
+    plks = emu.read_NeutObvs('p0k', mneut, nreal, nzbin, seed_hod, 
+            Nmesh=Nmesh, rsd=rsd, krange=krange, silent=True)
+    mu_plks = np.sum(plks, axis=0)/float(plks.shape[0])
+    dplks = plks - mu_plks
+
+    X_fid = Comp.X_fid(nreal, nzbin, obvs='plk', poles=[0], mneut=0.0, 
+            Nmesh=Nmesh, rsd=rsd, HODrange=HODrange, krange=krange, silent=True)
     yerr = np.diag(np.cov(X_fid.T))
-    emu.trainGP(lhcube, plks, yerr=yerr) # train GP 
+    emu.trainGP(lhcube, dplks, yerr=yerr) # train GP 
     n_comp = len(emu.GPs) # number of GPs 
     print("%i GPs" % n_comp)
 
@@ -249,12 +256,13 @@ def HODemulator_trainGP_Pk(mneut=0.0, nreal=1, nzbin=4, seed_hod=1, Nmesh=360, r
     for i in range(p_hods.shape[0]): 
         for ik, k in enumerate(emu.HOD_params): 
             p_hods[i,ik] = 0.5*(emu.HODrange_max[ik] + emu.HODrange_min[ik]) + \
-                    np.random.uniform(-0.33, 0.33) * (emu.HODrange_max[ik] - emu.HODrange_min[ik])
+                    np.random.uniform(-0.1, 0.1) * (emu.HODrange_max[ik] - emu.HODrange_min[ik])
+
     p0ks_gp = np.zeros((p_hods.shape[0], n_comp))
     var_gp = np.zeros((p_hods.shape[0], n_comp))
     for i in range(n_comp): 
         mu, var = emu.GPs[i].predict(plks[:,i], p_hods)
-        p0ks_gp[:,i] = mu
+        p0ks_gp[:,i] = mu + mu_plks[i]
         var_gp[:,i] = np.diag(var)
     
     p0ks_mock = []
@@ -271,12 +279,10 @@ def HODemulator_trainGP_Pk(mneut=0.0, nreal=1, nzbin=4, seed_hod=1, Nmesh=360, r
 
     # compare residual between the forwardmodeled P(k) to the Gaussian process
     # with the variance predicted by GP
-    fig = plt.figure() 
-    sub = fig.add_subplot(111)
+    fig = plt.figure(figsize=(8,4)) 
+    sub = fig.add_subplot(121)
     pretty_colors = prettycolors() 
-    for i in range(p_hods.shape[0]): 
-        #sub.fill_between(emu.k, -np.sqrt(var_gp[i,:])/p0ks_mock[i], np.sqrt(var_gp[i,:])/p0ks_mock[i], color=pretty_colors[i], edgecolor="none", alpha=0.5)  
-        sub.plot(emu.k, (p0ks_gp[i,:]-p0ks_mock[i])/p0ks_mock[i], ls='--', c=pretty_colors[i]) 
+    #sub.fill_between(emu.k, -np.sqrt(var_gp[i,:])/p0ks_mock[i], np.sqrt(var_gp[i,:])/p0ks_mock[i], color=pretty_colors[i], edgecolor="none", alpha=0.5)  
     # x-axis
     sub.set_xscale('log') 
     sub.set_xlim(krange) 
@@ -285,6 +291,19 @@ def HODemulator_trainGP_Pk(mneut=0.0, nreal=1, nzbin=4, seed_hod=1, Nmesh=360, r
     sub.set_ylim([-1., 1.])
     #sub.set_yscale('log') 
     sub.set_ylabel('$\Delta P(k)/P(k)$', fontsize=25)
+
+    sub2 = fig.add_subplot(122)
+    sub2.scatter(lhcube[:,0], lhcube[:,1], c='k')
+    for i in range(p_hods.shape[0]): 
+        sub.plot(emu.k, (p0ks_gp[i,:]-p0ks_mock[i])/p0ks_mock[i], ls='--', c='C'+str(i)) 
+        sub2.scatter([p_hods[i,0]], [p_hods[i,1]], c='C'+str(i))
+    # x-axis
+    sub2.set_xlim([emu.HODrange_min[0], emu.HODrange_max[0]]) 
+    sub2.set_xlabel(emu.HOD_labels[0], fontsize=20)
+    # y-axis
+    sub2.set_ylim([emu.HODrange_min[1], emu.HODrange_max[1]]) 
+    sub2.set_ylabel(emu.HOD_labels[1], fontsize=20)
+
     f = ''.join([UT.fig_dir(), 'tests/test.HODemulator.trainGP_Pk.png']) 
     fig.savefig(f, bbox_inches='tight') 
     return None 
@@ -350,8 +369,8 @@ def HODemulator_readHODLHD(HODrange='sinha2017prior_narrow', method='mdu', sampl
 
 
 if __name__=="__main__": 
-    HODemulator_PkNN_compress()
+    #HODemulator_PkNN_compress()
     #HODemulator_trainGP_Pk()
     #HODemulator_PkPCA()
-    HODemulator_PkNN()
-    #HODemulator_trainGP_Pk()
+    #HODemulator_PkNN()
+    HODemulator_trainGP_Pk()

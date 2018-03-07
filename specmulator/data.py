@@ -5,13 +5,164 @@ import numpy as np
 import nbodykit.lab as NBlab
 from halotools.sim_manager import UserSuppliedHaloCatalog
 
+# --- local --- 
 import util as UT
 import readsnap as RS
 import readfof 
 import forwardmodel as FM
+import lhd as LHD 
 
 
-def Fiducial_Obvs(obvs, nreal, nzbin, seed_hod, mneut=0.0, Nmesh=360, rsd=True, HODrange='sinha2017prior_narrow'): 
+def HODLHD_NeutObvs(obvs, mneut, nreal, nzbin, seed_hod, i_p, 
+        HODrange='sinha2017prior_narrow', method='nohl', samples=17, 
+        Nmesh=360, rsd=True, make=False, silent=False): 
+    ''' Calculate and save observables of the HOD LHD catalogs
+    '''
+    if rsd: str_rsd = '.zspace'
+    else: str_rsd = '.rspace'
+    folder = ''.join([UT.dat_dir(), 
+        'lhd/', str(mneut), 'eV_', str(nreal), '_z', str(nzbin), '_', str(samples), 'samples/', 
+        'HOD', method, '_seed', str(seed_hod), '_', str(i_p), '/']) 
+    if obvs == 'plk': 
+        fname = ''.join([folder, 
+            'pk.menut', str(mneut), '.nreal', str(nreal), '.nzbin', str(nzbin), str_rsd, '.', str(Nmesh), '.nbkt.dat'])
+
+    if os.path.isfile(fname): 
+        if not silent: print('--- reading from --- \n %s' % fname) 
+        # read observalbe from file 
+        k, p0k, p2k, p4k = np.loadtxt(fname, skiprows=4, unpack=True, usecols=[0,1,2,3])
+        obvs = {'k': k, 'p0k': p0k, 'p2k': p2k, 'p4k':p4k} 
+
+        # readin shot-noise from header 
+        f = open(fname, 'r') 
+        _ = f.readline() 
+        str_sn = f.readline() 
+        obvs['shotnoise'] = float(str_sn.strip().split('shotnoise')[-1])
+    else: 
+        if not make: 
+            raise ValueError
+        gals = HODLHD_NeutCatalog(mneut, nreal, nzbin, seed_hod, i_p, 
+                HODrange=HODrange, method=method, samples=samples)
+
+        if obvs == 'plk': # power spectrum multipole 
+            plk = FM.Observables(gals, observable='plk', rsd=rsd, Nmesh=Nmesh)
+            
+            # save to file 
+            f = open(fname, 'w')
+            f.write("### header ### \n")
+            f.write("# shotnoise %f \n" % plk['shotnoise'])
+            f.write("# columns : k , P0, P2, P4 \n")
+            f.write('### header ### \n') 
+
+            for ik in range(len(plk['k'])): 
+                f.write("%f \t %f \t %f \t %f" % (plk['k'][ik], plk['p0k'][ik], plk['p2k'][ik], plk['p4k'][ik]))
+                f.write("\n") 
+            f.close() 
+            obvs = plk
+        else: 
+            raise NotImplementedError('only Plk implemented') 
+    return obvs
+
+
+def HODLHD_NeutCatalog(mneut, nreal, nzbin, seed_hod, i_p, HODrange='sinha2017prior_narrow', method='mdu', samples=17): 
+    ''' Generate HOD catalogs from specified halo catalog 
+    based on the LHD sampled by the Sinha M., et al. (2017) HOD parameter priors. 
+
+    parameters
+    ----------
+    mneut : float, 
+        total neutrino mass 
+
+    nreal : int,
+        realization number 
+
+    nzbin : int, 
+        integer specifying the redshift of the snapshot. 
+        nzbin = 0 --> z=3
+        nzbin = 1 --> z=2
+        nzbin = 2 --> z=1
+        nzbin = 3 --> z=0.5
+        nzbin = 4 --> z=0
+    
+    seed_hod : int, 
+        random seed for the HOD 
+
+    HODrange : str, optional
+        string specifying the HOD range. Default is 'sinha2017prior', which uses
+        the prior from Sinha et al. (2017) 
+
+    method : str 
+        string specifying the method of LHD. Default is nohl 
+
+    samples : int, optional 
+        sample size of the LHD. Default is 17, which is from the fixed sample size of NOHL method.
+
+    LOS : list, optional 
+        3 element list of integers 0 or 1 that specify the the line-of-sight direction 
+    '''
+    folder = ''.join([UT.dat_dir(), 
+        'lhd/', str(mneut), 'eV_', str(nreal), '_z', str(nzbin), '_', str(samples), 'samples/', 
+        'HOD', method, '_seed', str(seed_hod), '_', str(i_p), '/']) 
+    
+    if isinstance(i_p, int): assert i_p < samples
+        
+    # read in  Neutrino halo with mneut eV, realization # nreal, at z specified by nzbin 
+    halos = NeutHalos(mneut, nreal, nzbin) 
+
+    if not np.all([os.path.exists(folder+subfold+'/') for subfold in ['Position', 'Velocity', 'RSDPosition']]):   
+        # generate the LHD HOD catalog  
+        if HODrange in ['sinha2017prior', 'sinha2017prior_narrow']:  
+            keylist = ['logMmin', 'sigma_logM', 'logM0', 'logM1', 'alpha'] 
+        lhcube = HOD_LHD(HODrange=HODrange, samples=samples, method=method)
+    
+        print('%i of %i LHD'%(i_p+1,samples))
+        p_hod = {} 
+        for ik, k in enumerate(keylist): 
+            p_hod[k] = lhcube[i_p,ik]
+        print(p_hod)
+        
+        # populate the halo catalogs using HOD 
+        gals = FM.Galaxies(halos, p_hod, seed=seed_hod)  
+        
+        # RSD position (hardcoded in the z direction) 
+        gals['RSDPosition'] = FM.RSD(gals, LOS=[0,0,1]) 
+
+        parent_dir = '/'.join(folder[:-1].split('/')[:-1])+'/'
+        if not os.path.exists(parent_dir): # make directory
+            os.mkdir(parent_dir) 
+        # save to file 
+        gals.save(folder, ('Position', 'Velocity', 'RSDPosition'))
+    else:
+        # read from file 
+        gals = NBlab.BigFileCatalog(folder, header='Header')
+        gals.cosmo = halos.cosmo # save cosmology 
+    return gals 
+
+
+def X_fid(nreal, nzbin, obvs='plk', Nsample=100, poles=[0], mneut=0.0, Nmesh=360, rsd=True, 
+        HODrange='sinha2017prior_narrow', krange=[0.01, 0.5], karr=False, silent=False):
+    ''' data matrix of `Nsample` observables `obvs`. This data matrix would be useful 
+    for something calculating  
+    '''
+    X = [] 
+    for seed_hod in range(1,Nsample+1): 
+        obv_data = Fiducial_Obvs(obvs, nreal, nzbin, seed_hod, mneut=mneut, 
+                Nmesh=Nmesh, rsd=rsd, HODrange=HODrange, silent=silent)
+        if obvs == 'plk': 
+            klim = np.where((obv_data['k'] > krange[0]) & (obv_data['k'] < krange[1]))
+            pk_i = [] 
+            for pole in poles: 
+                pk_i.append(obv_data['p'+str(pole)+'k'][klim]) 
+            X.append(np.concatenate(pk_i))
+        else: 
+            raise ValueError
+    if not karr: 
+        return np.array(X) 
+    else: 
+        return obv_data['k'][klim], np.array(X) 
+
+
+def Fiducial_Obvs(obvs, nreal, nzbin, seed_hod, mneut=0.0, Nmesh=360, rsd=True, HODrange='sinha2017prior_narrow', silent=False): 
     ''' Calculate and save observables of the fiducial HOD catalogs
     '''
     if mneut != 0.0: raise ValueError("Fiducial should be calculated at m_nu=0.0eV") 
@@ -26,7 +177,7 @@ def Fiducial_Obvs(obvs, nreal, nzbin, seed_hod, mneut=0.0, Nmesh=360, rsd=True, 
             'pk.menut', str(mneut), '.nreal', str(nreal), '.nzbin', str(nzbin), str_rsd, '.', str(Nmesh), '.nbkt.dat'])
 
     if os.path.isfile(fname): 
-        print('--- reading from --- \n %s' % fname) 
+        if not silent: print('--- reading from --- \n %s' % fname) 
         # read observalbe from file 
         k, p0k, p2k, p4k = np.loadtxt(fname, skiprows=4, unpack=True, usecols=[0,1,2,3])
         obvs = {'k': k, 'p0k': p0k, 'p2k': p2k, 'p4k':p4k} 
