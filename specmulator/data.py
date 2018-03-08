@@ -13,6 +13,38 @@ import forwardmodel as FM
 import lhd as LHD 
 
 
+def X_lhd(mneut, nreal, nzbin, seed_hod, obvs='plk', 
+        ell=0, Nmesh=360, rsd=True, krange=[0.01, 0.5], karr=False, # kwargs specifying P(k)
+        HODrange='sinha2017prior_narrow', samples=40, method='mdu', # kwargs specifying the LHD 
+        silent=False):
+    ''' Return P(k | mneut, nreal, nzbin, seed_hod)s for a LHD of HOD parameters (specified using HODrange) 
+    '''
+    if ell not in [0,2,4]: 
+        raise ValueError("only monopole, quadrupole, and hexadecapole") 
+
+    plks = [] 
+    for i_p in range(samples): 
+        try: 
+            plk_i = HODLHD_NeutObvs('plk', mneut, nreal, nzbin, seed_hod, i_p,
+                    HODrange=HODrange, method=method, samples=samples, Nmesh=Nmesh, 
+                    rsd=rsd, make=False, silent=silent)
+        except ValueError: 
+            continue 
+        if krange is not None: 
+            klim = np.where((plk_i['k'] > krange[0]) & (plk_i['k'] < krange[1]))
+            plks.append(plk_i['p'+str(ell)+'k'][klim])
+        else:
+            plks.append(plk_i['p'+str(ell)+'k'])
+    if krange is not None: 
+        k = plk_i['k'][klim]
+    else:
+        k = plk_i['k']
+    if not karr: 
+        return np.array(plks) 
+    else: 
+        return k, np.array(plks) 
+
+
 def HODLHD_NeutObvs(obvs, mneut, nreal, nzbin, seed_hod, i_p, 
         HODrange='sinha2017prior_narrow', method='nohl', samples=17, 
         Nmesh=360, rsd=True, make=False, silent=False): 
@@ -113,7 +145,7 @@ def HODLHD_NeutCatalog(mneut, nreal, nzbin, seed_hod, i_p, HODrange='sinha2017pr
         # generate the LHD HOD catalog  
         if HODrange in ['sinha2017prior', 'sinha2017prior_narrow']:  
             keylist = ['logMmin', 'sigma_logM', 'logM0', 'logM1', 'alpha'] 
-        lhcube = HOD_LHD(HODrange=HODrange, samples=samples, method=method)
+        lhcube = LHD.HOD_LHD(HODrange=HODrange, samples=samples, method=method)
     
         print('%i of %i LHD'%(i_p+1,samples))
         p_hod = {} 

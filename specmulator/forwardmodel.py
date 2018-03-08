@@ -5,6 +5,8 @@ F(theta)
 
 
 '''
+import numpy as np 
+
 import bigfile as BF 
 import nbodykit.lab as NBlab
 from nbodykit.lab import HODCatalog
