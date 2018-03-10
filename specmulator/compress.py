@@ -23,7 +23,6 @@ def PCA_fid(n_comp, mneut=0.0, nreal=1, nzbin=4, obvs='plk', poles=[0], Nmesh=36
     return pca_fid
 
 
-
 def PCA_decomp(X, n_comp=None, exp_var=False):
     ''' PCA decomposition using sklearn's SVD 
     '''
