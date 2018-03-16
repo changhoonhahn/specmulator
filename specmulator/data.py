@@ -63,7 +63,7 @@ def HODLHD_NeutObvs(obvs, mneut, nreal, nzbin, seed_hod, i_p,
         fname = ''.join([folder, 
             'pk.menut', str(mneut), '.nreal', str(nreal), '.nzbin', str(nzbin), str_rsd, '.', str(Nmesh), '.nbkt.dat'])
 
-    if os.path.isfile(fname): 
+    if os.path.isfile(fname) and not make: 
         if not silent: print('--- reading from --- \n %s' % fname) 
         # read observalbe from file 
         k, p0k, p2k, p4k = np.loadtxt(fname, skiprows=4, unpack=True, usecols=[0,1,2,3])

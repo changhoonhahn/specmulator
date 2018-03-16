@@ -14,7 +14,7 @@ from pmesh.pm import ParticleMesh
 from scipy.interpolate import InterpolatedUnivariateSpline as interpolate
 
 
-def Observables(cat, observable='plk', rsd=False, Nmesh=256, krange=None): 
+def Observables(cat, observable='plk', rsd=False, Nmesh=256, dk=0.01, kmin=0.01, krange=None): 
     ''' Given galaxy/halo catalog, measure specified observables 
     (e.g. powerspectrum multipoles). 
     '''
@@ -23,7 +23,7 @@ def Observables(cat, observable='plk', rsd=False, Nmesh=256, krange=None):
         if rsd: str_pos = 'RSDPosition'
         else: str_pos = 'Position'
         mesh = cat.to_mesh(window='tsc', Nmesh=Nmesh, compensated=True, position=str_pos)
-        r = NBlab.FFTPower(mesh, mode='2d', dk=0.005, kmin=0.005, Nmu=5, los=[0,0,1], poles=[0,2,4])
+        r = NBlab.FFTPower(mesh, mode='2d', dk=dk, kmin=kmin, Nmu=5, los=[0,0,1], poles=[0,2,4])
         poles = r.poles
         if krange is None: 
             klim = np.ones(len(poles['k'])).astype('bool') 

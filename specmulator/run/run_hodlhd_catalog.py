@@ -62,7 +62,7 @@ def hodlhd_catalogs(mneut, nreal, nzbin, seed_hod, i_p, HODrange='sinha2017prior
     LOS : list, optional 
         3 element list of integers 0 or 1 that specify the the line-of-sight direction 
     '''
-    _ = lhd.HODLHD_NeutCatalog(mneut, nreal, nzbin, seed_hod, i_p, 
+    _ = Dat.HODLHD_NeutCatalog(mneut, nreal, nzbin, seed_hod, i_p, 
             HODrange=HODrange, method=method, samples=samples)
     return None 
 
@@ -71,8 +71,8 @@ def hodlhd_observables(obvs, mneut, nreal, nzbin, seed_hod, i_p, HODrange='sinha
         Nmesh=360, rsd=True): 
     ''' Calculate and save observables of the HOD LHD catalogs
     '''
-    _ = lhd.HODLHD_NeutObvs(obvs, mneut, nreal, nzbin, seed_hod, i_p,
-            HODrange=HODrange, method=method, samples=samples, Nmesh=Nmesh, rsd=rsd)
+    _ = Dat.HODLHD_NeutObvs(obvs, mneut, nreal, nzbin, seed_hod, i_p,
+            HODrange=HODrange, method=method, samples=samples, Nmesh=Nmesh, rsd=rsd, make=True)
     return None 
 
 
