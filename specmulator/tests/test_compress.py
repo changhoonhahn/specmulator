@@ -46,26 +46,25 @@ def test_Svd():
     return None
 
 
-def test_PC(): 
+def test_PC(n_comp): 
     '''
     '''
     k_arr, pk_lhd = Dat.X_lhd(0.0, 1, 4, 1, obvs='pk', 
             ell=0, Nmesh=360, rsd=True, krange=[0.01, 0.5], karr=True,
             HODrange='sinha2017prior_narrow', samples=40, method='mdu', silent=True)
-    svd = Comp.Svd()
+    svd = Comp.Svd(n_comp=n_comp)
     _ = svd.fit(pk_lhd) 
     pcs = svd.transform(pk_lhd) 
 
-    fig = plt.figure()
-    sub = fig.add_subplot(111)
-    for i in range(pcs.shape[0]):  
-        sub.plot(range(pcs.shape[1]), pcs[i,:])
-    f = ''.join([UT.fig_dir(), 'tests/plk_svd.pc.png']) 
+    fig = plt.figure(figsize=(4*n_comp, 4))
+    for i in range(n_comp):  
+        sub = fig.add_subplot(1,n_comp,i+1)
+        sub.hist(pcs[:,i], normed=True)
+        sub.set_xlabel('PC '+str(i+1), fontsize=20)
+    f = ''.join([UT.fig_dir(), 'tests/plk_svd.pc.', str(n_comp), 'comp.png']) 
     fig.savefig(f, bbox_inches='tight') 
     return None
 
 
-
-
 if __name__=="__main__": 
-    test_PC()
+    test_PC(5)
