@@ -37,8 +37,11 @@ class Svd(object):
         if self.n_comp is None: 
             self.n_comp = U.shape[0] 
 
-        self.exp_var = (sigma**2) / (X_w.shape[0] - 1) 
-        self.exp_var_ratio = self.exp_var/self.exp_var.sum()
+        exp_var = ((sigma**2) / (X_w.shape[0] - 1))
+        exp_var_ratio = exp_var/exp_var.sum()
+        
+        self.exp_var = exp_var[:self.n_comp]
+        self.exp_var_ratio = exp_var_ratio[:self.n_comp]
 
         return U, sigma, Vt
 

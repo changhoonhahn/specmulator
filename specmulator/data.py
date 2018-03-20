@@ -31,7 +31,7 @@ def X_lhd(mneut, nreal, nzbin, seed_hod, obvs='plk',
         try: 
             plk_i = HODLHD_NeutObvs('plk', mneut, nreal, nzbin, seed_hod, i_p,
                     HODrange=HODrange, method=method, samples=samples, Nmesh=Nmesh, 
-                    rsd=rsd, make=False, silent=silent)
+                    rsd=rsd, overwrite=False, silent=silent)
         except ValueError: 
             continue 
         if krange is not None: 

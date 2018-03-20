@@ -5,4 +5,5 @@ fig/*
 *hdf5
 run/*o6*
 *.o
+*.p
 zslepian/
