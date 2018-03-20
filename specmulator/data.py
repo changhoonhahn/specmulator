@@ -51,7 +51,7 @@ def X_lhd(mneut, nreal, nzbin, seed_hod, obvs='plk',
 
 def HODLHD_NeutObvs(obvs, mneut, nreal, nzbin, seed_hod, i_p, 
         HODrange='sinha2017prior_narrow', method='nohl', samples=17, 
-        Nmesh=360, rsd=True, make=False, silent=False): 
+        Nmesh=360, rsd=True, overwrite=False, silent=False): 
     ''' Calculate and save observables of the HOD LHD catalogs
     '''
     if rsd: str_rsd = '.zspace'
@@ -63,7 +63,7 @@ def HODLHD_NeutObvs(obvs, mneut, nreal, nzbin, seed_hod, i_p,
         fname = ''.join([folder, 
             'pk.menut', str(mneut), '.nreal', str(nreal), '.nzbin', str(nzbin), str_rsd, '.', str(Nmesh), '.nbkt.dat'])
 
-    if os.path.isfile(fname) and not make: 
+    if os.path.isfile(fname) and not overwrite: 
         if not silent: print('--- reading from --- \n %s' % fname) 
         # read observalbe from file 
         k, p0k, p2k, p4k = np.loadtxt(fname, skiprows=4, unpack=True, usecols=[0,1,2,3])
@@ -75,8 +75,6 @@ def HODLHD_NeutObvs(obvs, mneut, nreal, nzbin, seed_hod, i_p,
         str_sn = f.readline() 
         obvs['shotnoise'] = float(str_sn.strip().split('shotnoise')[-1])
     else: 
-        if not make: 
-            raise ValueError
         gals = HODLHD_NeutCatalog(mneut, nreal, nzbin, seed_hod, i_p, 
                 HODrange=HODrange, method=method, samples=samples)
 
@@ -100,7 +98,8 @@ def HODLHD_NeutObvs(obvs, mneut, nreal, nzbin, seed_hod, i_p,
     return obvs
 
 
-def HODLHD_NeutCatalog(mneut, nreal, nzbin, seed_hod, i_p, HODrange='sinha2017prior_narrow', method='mdu', samples=17): 
+def HODLHD_NeutCatalog(mneut, nreal, nzbin, seed_hod, i_p, 
+        HODrange='sinha2017prior_narrow', method='mdu', samples=17, overwrite=True): 
     ''' Generate HOD catalogs from specified halo catalog 
     based on the LHD sampled by the Sinha M., et al. (2017) HOD parameter priors. 
 
@@ -145,7 +144,7 @@ def HODLHD_NeutCatalog(mneut, nreal, nzbin, seed_hod, i_p, HODrange='sinha2017pr
     # read in  Neutrino halo with mneut eV, realization # nreal, at z specified by nzbin 
     halos = NeutHalos(mneut, nreal, nzbin) 
 
-    if not np.all([os.path.exists(folder+subfold+'/') for subfold in ['Position', 'Velocity', 'RSDPosition']]):   
+    if (not np.all([os.path.exists(folder+subfold+'/') for subfold in ['Position', 'Velocity', 'RSDPosition']])) or overwrite:   
         # generate the LHD HOD catalog  
         if HODrange in ['sinha2017prior', 'sinha2017prior_narrow']:  
             keylist = ['logMmin', 'sigma_logM', 'logM0', 'logM1', 'alpha'] 

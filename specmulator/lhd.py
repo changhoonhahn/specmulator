@@ -19,7 +19,7 @@ except ModuleNotFoundError:
     pass 
 
 
-def HOD_LHD(HODrange=None, samples=None, method=None):
+def HOD_LHD(HODrange=None, samples=None, method=None, overwrite=False):
     ''' Return latin hypercubes for vanilla Zheng et al.(2007) 
     HOD model. 
 
@@ -43,7 +43,7 @@ def HOD_LHD(HODrange=None, samples=None, method=None):
     
     fname = ''.join([UT.dat_dir(), 'lhd/HOD_LHD.', HODrange, '.', method, '.', str(samples), 'samples.dat']) 
     
-    if os.path.isfile(fname): # file exists 
+    if os.path.isfile(fname) and not overwrite: # file exists 
         lhcube = np.loadtxt(fname, skiprows=4)
     else: 
         # Nsample x Ndim latin hypercube

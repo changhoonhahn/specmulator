@@ -22,11 +22,12 @@ def HOD_LHD(HODrange='sinha2017prior_narrow', samples=17):
     m_list = ['maximin', 'centermaximin', 'mdu', 'nohl']
     for meth in m_list: 
         print(meth)
-        lhd.HOD_LHD(HODrange=HODrange, samples=samples, method=meth) 
+        lhd.HOD_LHD(HODrange=HODrange, samples=samples, method=meth, overwrite=True) 
     return None 
 
 
-def hodlhd_catalogs(mneut, nreal, nzbin, seed_hod, i_p, HODrange='sinha2017prior_narrow', method='mdu', samples=17): 
+def hodlhd_catalogs(mneut, nreal, nzbin, seed_hod, i_p, 
+        HODrange='sinha2017prior_narrow', method='mdu', samples=17): 
     ''' Generate HOD catalogs from specified halo catalog 
     based on the LHD sampled by the Sinha M., et al. (2017) HOD parameter priors. 
 
@@ -63,7 +64,7 @@ def hodlhd_catalogs(mneut, nreal, nzbin, seed_hod, i_p, HODrange='sinha2017prior
         3 element list of integers 0 or 1 that specify the the line-of-sight direction 
     '''
     _ = Dat.HODLHD_NeutCatalog(mneut, nreal, nzbin, seed_hod, i_p, 
-            HODrange=HODrange, method=method, samples=samples)
+            HODrange=HODrange, method=method, samples=samples, overwrite=True)
     return None 
 
 
@@ -72,7 +73,8 @@ def hodlhd_observables(obvs, mneut, nreal, nzbin, seed_hod, i_p, HODrange='sinha
     ''' Calculate and save observables of the HOD LHD catalogs
     '''
     _ = Dat.HODLHD_NeutObvs(obvs, mneut, nreal, nzbin, seed_hod, i_p,
-            HODrange=HODrange, method=method, samples=samples, Nmesh=Nmesh, rsd=rsd, make=True)
+            HODrange=HODrange, method=method, samples=samples, Nmesh=Nmesh, rsd=rsd, 
+            overwrite=True)
     return None 
 
 
