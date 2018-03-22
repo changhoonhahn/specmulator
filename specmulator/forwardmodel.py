@@ -9,7 +9,10 @@ import numpy as np
 
 import bigfile as BF 
 import nbodykit.lab as NBlab
-from nbodykit.lab import HODCatalog
+try: 
+    from nbodykit.lab import HODCatalog
+except ImportError:
+    from _hod import HODCatalog
 from pmesh.pm import ParticleMesh
 from scipy.interpolate import InterpolatedUnivariateSpline as interpolate
 
