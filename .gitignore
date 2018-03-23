@@ -6,4 +6,5 @@ fig/*
 run/*o6*
 *.o
 *.p
+edison*.slurm
 zslepian/
