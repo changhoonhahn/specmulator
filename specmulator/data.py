@@ -32,7 +32,8 @@ def X_lhd(mneut, nreal, nzbin, seed_hod, obvs='plk',
             plk_i = HODLHD_NeutObvs('plk', mneut, nreal, nzbin, seed_hod, i_p,
                     HODrange=HODrange, method=method, samples=samples, Nmesh=Nmesh, 
                     rsd=rsd, overwrite=False, silent=silent)
-        except ValueError: 
+        except (ValueError, IOError): 
+            print("%i of the LHD not read" % i_p)
             continue 
         if krange is not None: 
             klim = np.where((plk_i['k'] > krange[0]) & (plk_i['k'] < krange[1]))
@@ -63,7 +64,7 @@ def HODLHD_NeutObvs(obvs, mneut, nreal, nzbin, seed_hod, i_p,
         fname = ''.join([folder, 
             'pk.menut', str(mneut), '.nreal', str(nreal), '.nzbin', str(nzbin), str_rsd, '.', str(Nmesh), '.nbkt.dat'])
 
-    if os.path.isfile(fname) and not overwrite: 
+    if os.path.isfile(fname) or not overwrite: 
         if not silent: print('--- reading from --- \n %s' % fname) 
         # read observalbe from file 
         k, p0k, p2k, p4k = np.loadtxt(fname, skiprows=4, unpack=True, usecols=[0,1,2,3])
