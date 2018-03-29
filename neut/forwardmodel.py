@@ -9,10 +9,7 @@ import numpy as np
 
 import bigfile as BF 
 import nbodykit.lab as NBlab
-try: 
-    from nbodykit.lab import HODCatalog
-except ImportError:
-    from _hod import HODCatalog
+from nbodykit.hod import Zheng07Model
 from pmesh.pm import ParticleMesh
 from scipy.interpolate import InterpolatedUnivariateSpline as interpolate
 
@@ -69,8 +66,7 @@ def Galaxies(halos, p_hod, seed=None):
     if 'sigma_logM' not in p_hod.keys(): 
         raise ValueError
     # run HOD
-    halocat = halos.to_halotools(halos.attrs['BoxSize'])
-    hod = HODCatalog(halocat, seed=seed, **p_hod)
+    hod = halos.populate(Zheng07Model, seed=seed, **p_hod) 
     return hod 
 
 
