@@ -9,7 +9,7 @@ import random
 import numpy as np 
 import nbodykit.lab as NBlab
 
-import util as UT
+from . import util as UT
 
 try: 
     import pynolh as pyNOLH
