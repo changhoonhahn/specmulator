@@ -8,7 +8,8 @@ import os
 import sys 
 import numpy as np 
 import nbodykit.lab as NBlab
-
+# -- local -- 
+import env
 from neut import data as Dat
 from neut import forwardmodel as FM
 from specmulator import util as UT
@@ -201,10 +202,23 @@ if __name__=="__main__":
     i_lhd = int(sys.argv[4])
 
     if lhd_or_test == 'lhd': 
-        pass 
+        print('constructing LHD sample %i' % i_lhd) 
+        print('with random seed %i ' % seed_hod)
+        # construct catalog
+        HODLHDcatalogs(seed_hod, i_lhd, 
+                prior='sinha2017prior_narrow', method='mdu', samples=nsample)
+        # real space P(k)
+        HODLHDpks(seed_hod, i_lhd, 
+                prior='sinha2017prior_narrow', method='mdu', samples=nsample, 
+                Nmesh=360, rsd=False)
+        # redshift space P(k)
+        HODLHDpks(seed_hod, i_lhd, 
+                prior='sinha2017prior_narrow', method='mdu', samples=nsample, 
+                Nmesh=360, rsd=True)
     elif lhd_or_test == 'test': 
         print('constructing test sample %i' % i_lhd) 
         print('with random seed %i ' % seed_hod)
+        # construct catalog
         testHODLHDcatalogs(seed_hod, i_lhd, prior='sinha2017prior_narrow', samples=nsample)
         # real space P(k)
         testHODLHDpks(seed_hod, i_lhd, prior='sinha2017prior_narrow', samples=nsample, 
