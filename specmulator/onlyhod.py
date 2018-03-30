@@ -28,6 +28,11 @@ def X_HODLHD(seed_hod, obvs='plk',
     # read in observable
     pks = [] 
     for i in range(samples):  
+        # 21st LHD HOD theta requires ton of memory 
+        # this should be addressed more robustly but for
+        # the sake of my sanity at the moment, I will skip 
+        # it for now. 
+        if i == 21: continue 
         # directory of theta_i,LHD 
         fname = ''.join([f_dir, 'HOD', method, '_seed', str(seed_hod), '_', str(i), '/', 
            'pk.menut0.0.nreal1.nzbin4.', rsd_str, 'space.', str(Nmesh), '.nbkt.dat'])   
@@ -77,6 +82,28 @@ def X_testHODLHD(seed_hod, obvs='plk',
         return np.array(pks) 
 
 
+def _check_X_HODLHD(seed_hod, obvs='plk', 
+        ell=0, Nmesh=360, rsd=True, karr=False, # kwargs specifying P(k)
+        prior='sinha2017prior_narrow', samples=40, method='mdu',    # kwargs specifying the LHD 
+        silent=True):
+    ''' check whether all the X_HODLHD files are there
+    '''
+    f_dir = ''.join([UT.dat_dir(), 'lhd/onlyHOD/', method, '_', str(samples), '_', prior, '/']) 
+    # rsd flag 
+    if rsd: rsd_str = 'z'
+    else: rsd_str = 'r'
+
+    # read in observable
+    for i in range(samples):  
+        if i == 21: continue # 21 requires ton of memory 
+        # directory of theta_i,LHD 
+        fname = ''.join([f_dir, 'HOD', method, '_seed', str(seed_hod), '_', str(i), '/', 
+           'pk.menut0.0.nreal1.nzbin4.', rsd_str, 'space.', str(Nmesh), '.nbkt.dat'])   
+        if not os.path.isfile(fname):
+            print('%s does not exist' % fname) 
+    return None 
+
+
 # -- HOD LHD -- 
 def HOD_LHD(prior=None, samples=None, method=None, overwrite=False):
     ''' Return latin hypercubes with `samples` elements using `method` method 
@@ -91,6 +118,10 @@ def HOD_LHD(prior=None, samples=None, method=None, overwrite=False):
     
     if os.path.isfile(fname) and not overwrite: # file exists 
         lhcube = np.loadtxt(fname, skiprows=4)
+        # skip 21st LHD parameter
+        indx = np.ones(lhcube.shape[0], dtype=bool)
+        indx[21] = False
+        lhcube = lhcube[indx,:]
     else: 
         hodprior = HODprior(prior) 
         hod_range = hodprior.range()
