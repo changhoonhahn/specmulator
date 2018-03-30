@@ -9,7 +9,70 @@ import scipy.optimize as op
 import george as George
 from george import kernels as Kerns
 
-import lhd 
+from . import lhd 
+
+
+class Svd(object): 
+    ''' Class object for Singular Value Decomposition (SVD) using 
+    `numpy.linalg.svd` because the sklearn.decomposition.PCA is gnarly.   
+    Use SVD to get n_comp principal components from some specified 
+    data X. 
+    '''
+    def __init__(self, X, n_comp=None): 
+        _ = self._fit(X, n_comp=n_comp)
+
+    def _fit(self, X, n_comp=n_comp): 
+        ''' Do the actual single value decomposition given data matrix
+        X with dimensions N_sample x N_features. In the case of 
+        '''
+        self._mean = np.mean(X, axis=0)  
+        self._stddev = np.std(X, axis=0) 
+        
+        # whiten 
+        X_w = self._white(X) 
+
+        # X_w  = U * np.diag(sigma) * Vt 
+        U, sigma, Vt = np.linalg.svd(X_w) 
+
+        self._U = U 
+        self._sigma = sigma
+        self._Vt = Vt
+        
+        if self.n_comp is None: 
+            self.n_comp = U.shape[0] 
+        else: 
+            self.n_comp = n_comp 
+
+        exp_var = ((sigma**2) / (X_w.shape[0] - 1))
+        exp_var_ratio = exp_var/exp_var.sum()
+        
+        self.exp_var = exp_var[:self.n_comp]
+        self.exp_var_ratio = exp_var_ratio[:self.n_comp]
+
+        return U, sigma, Vt
+
+    def transform(self, X): 
+        '''
+        '''
+        X_w = self._white(X) 
+
+        return np.dot(X_w, self._Vt[:self.n_comp,:].T/np.sqrt(len(self._sigma)))
+
+    def inv_transform(self, pc):  
+        '''
+        '''
+        # check dimensions
+        assert pc.shape[1] == self.n_comp
+
+        X_rec = np.dot(pc, self._Vt[:self.n_comp,:]) * np.sqrt(len(self._sigma)) 
+
+        return (X_rec * self._stddev) + self._mean
+    
+    def _white(self, X): 
+        ''' whiten the data by subtracting out the mean and divide out the
+        standard deviation for each feature columns. 
+        '''
+        return (X - self._mean)/self._stddev
 
 
 class HODemulator(object): 
