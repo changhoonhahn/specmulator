@@ -92,7 +92,7 @@ def X_testHODLHD():
     # average over 10 realization to make less noisy
     X_pk_test = [] 
     for i in range(1, 11): 
-        X_pk_test_i = onlyHOD.X_testHODLHD(1, 
+        X_pk_test_i = onlyHOD.X_testHODLHD(i, 
                 prior='sinha2017prior_narrow', samples=20) 
         X_pk_test.append(X_pk_test_i) 
     X_pk_test = np.mean(X_pk_test, axis=0) 
@@ -124,5 +124,4 @@ def X_testHODLHD():
 
 
 if __name__=="__main__": 
-    X_HODLHD()
     X_testHODLHD()

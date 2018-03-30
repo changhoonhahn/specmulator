@@ -21,7 +21,7 @@ class Svd(object):
     def __init__(self, X, n_comp=None): 
         _ = self._fit(X, n_comp=n_comp)
 
-    def _fit(self, X, n_comp=n_comp): 
+    def _fit(self, X, n_comp=None): 
         ''' Do the actual single value decomposition given data matrix
         X with dimensions N_sample x N_features. In the case of 
         '''
@@ -38,7 +38,7 @@ class Svd(object):
         self._sigma = sigma
         self._Vt = Vt
         
-        if self.n_comp is None: 
+        if n_comp is None: 
             self.n_comp = U.shape[0] 
         else: 
             self.n_comp = n_comp 
