@@ -28,9 +28,14 @@ def X_HODLHD():
     ''' Make sure that the powerspectra read in `specmulator.onlyhod.X_HODLHD` 
     are sensible. 
     '''
-    # read P(k|theta_i) for theta_i in LHD
-    k, X_pk = onlyHOD.X_HODLHD(1, 
-            prior='sinha2017prior_narrow', samples=40, karr=True) 
+    # read P(k|theta_i) for theta_i in LHD average over
+    # 10 realizations to make less noisy 
+    X_pk = []
+    for i in range(1,11): 
+        k, X_pk_i = onlyHOD.X_HODLHD(i, 
+                prior='sinha2017prior_narrow', samples=40, karr=True) 
+        X_pk.append(X_pk_i) 
+    X_pk = np.mean(X_pk, axis=0) 
 
     fig = plt.figure(figsize=(6,6))
     sub = fig.add_subplot(111)
@@ -51,13 +56,23 @@ def X_testHODLHD():
     ''' Make sure that the powerspectra `specmulator.onlyhod.X_testHODLHD` 
     are sensible. 
     '''
-    # read P(k|theta_i) for theta_i in LHD
-    k, X_pk = onlyHOD.X_HODLHD(1,  
-            prior='sinha2017prior_narrow', samples=40, karr=True) 
+    # read P(k|theta_i) for theta_i in LHD average over
+    # 10 realizations to make less noisy 
+    X_pk = []
+    for i in range(1,11): 
+        k, X_pk_i = onlyHOD.X_HODLHD(i, 
+                prior='sinha2017prior_narrow', samples=40, karr=True) 
+        X_pk.append(X_pk_i) 
+    X_pk = np.mean(X_pk, axis=0) 
 
     # read P(k|theta_i) for theta_i in LHD test sample 
-    X_pk_test = onlyHOD.X_testHODLHD(1, 
-            prior='sinha2017prior_narrow', samples=20) 
+    # average over 10 realization to make less noisy
+    X_pk_test = [] 
+    for i in range(1, 11): 
+        X_pk_test_i = onlyHOD.X_testHODLHD(1, 
+                prior='sinha2017prior_narrow', samples=20) 
+        X_pk_test.append(X_pk_test_i) 
+    X_pk_test = np.mean(X_pk_test, axis=0) 
 
     fig = plt.figure(figsize=(6,6))
     sub = fig.add_subplot(111)
