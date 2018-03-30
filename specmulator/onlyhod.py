@@ -46,7 +46,7 @@ def X_HODLHD(seed_hod, obvs='plk',
 
 def X_testHODLHD(seed_hod, obvs='plk', 
         ell=0, Nmesh=360, rsd=True, karr=False,     # kwargs specifying P(k)
-        prior='sinha2017prior_narrow', samples=40,  # kwargs specifying the LHD 
+        prior='sinha2017prior_narrow', samples=20,  # kwargs specifying the LHD 
         silent=True):
     ''' Read observable (e.g. P(k)) for a LHD of HOD parameters (specified by prior, 
     samples, and method) 
@@ -62,7 +62,7 @@ def X_testHODLHD(seed_hod, obvs='plk',
     pks = [] 
     for i in range(samples):  
         # directory of theta_i,LHD 
-        fname = ''.join([f_dir, 'testHOD_seed', str(seed_hod), '_', str(i_lhd), '/',
+        fname = ''.join([f_dir, 'testHOD_seed', str(seed_hod), '_', str(i), '/',
             'pk.menut0.0.nreal1.nzbin4.', rsd_str, 'space.', str(Nmesh), '.nbkt.dat'])   
         if not silent: 
             print('%i -- reading %s' % (i, fname))  
