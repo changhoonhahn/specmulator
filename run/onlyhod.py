@@ -177,7 +177,7 @@ def testHODLHDcatalogs(seed_hod, i_lhd, prior='sinha2017prior_narrow', samples=2
     halos = Dat.NeutHalos(0.0, 1, 4)
 
     # read in test sample for the HOD LHD 
-    lhcube = onlyHOD.testHOD_LHD(prior=prior, samples=samples)
+    lhcube = onlyHOD.testHOD_LHD(prior=prior, samples=samples, ndim=ndim)
         
     print('%i of %i LHD' % (i_lhd+1,samples))
     p_hod = {}
