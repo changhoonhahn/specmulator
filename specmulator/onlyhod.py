@@ -13,13 +13,16 @@ from specmulator import util as UT
 # --- Data -- 
 def X_HODLHD(seed_hod, obvs='plk', 
         ell=0, Nmesh=360, rsd=True, karr=False, # kwargs specifying P(k)
-        prior='sinha2017prior_narrow', samples=40, method='mdu',    # kwargs specifying the LHD 
+        prior='sinha2017prior_narrow', samples=40, method='mdu', ndim=None, # kwargs for LHD 
         silent=True):
     ''' Read observable (e.g. P(k)) for a LHD of HOD parameters (specified by prior, 
     samples, and method) 
     '''
     # directory of the catalogs 
-    f_dir = ''.join([UT.dat_dir(), 'lhd/onlyHOD/', method, '_', str(samples), '_', prior, '/']) 
+    if ndim is None: str_ndim = ''
+    else: str_ndim = '_'+str(ndim)+'D'
+    f_dir = ''.join([UT.dat_dir(), 'lhd/onlyHOD/', 
+        method, '_', str(samples), '_', prior, str_ndim, '/']) 
 
     # rsd flag 
     if rsd: rsd_str = 'z'
@@ -51,13 +54,15 @@ def X_HODLHD(seed_hod, obvs='plk',
 
 def X_testHODLHD(seed_hod, obvs='plk', 
         ell=0, Nmesh=360, rsd=True, karr=False,     # kwargs specifying P(k)
-        prior='sinha2017prior_narrow', samples=20,  # kwargs specifying the LHD 
+        prior='sinha2017prior_narrow', samples=20, ndim=None, # kwargs specifying the LHD 
         silent=True):
     ''' Read observable (e.g. P(k)) for a LHD of HOD parameters (specified by prior, 
     samples, and method) 
     '''
     # directory of the catalogs 
-    f_dir = ''.join([UT.dat_dir(), 'lhd/onlyHOD/test_', str(samples), '_', prior, '/']) 
+    if ndim is None: str_ndim = ''
+    else: str_ndim = '_'+str(ndim)+'D'
+    f_dir = ''.join([UT.dat_dir(), 'lhd/onlyHOD/test_', str(samples), '_', prior, str_ndim, '/']) 
 
     # rsd flag 
     if rsd: rsd_str = 'z'
@@ -105,7 +110,7 @@ def _check_X_HODLHD(seed_hod, obvs='plk',
 
 
 # -- HOD LHD -- 
-def HOD_LHD(prior=None, samples=None, method=None, overwrite=False):
+def HOD_LHD(prior=None, samples=None, method=None, ndim=None, overwrite=False):
     ''' Return latin hypercubes with `samples` elements using `method` method 
     that spans the specified prior of the vanilla Zheng et al.(2007) HOD model. 
 
@@ -114,20 +119,31 @@ def HOD_LHD(prior=None, samples=None, method=None, overwrite=False):
     - Zheng Z., et al. (2007) -- arXiv:0512071
     - Sinha M., et al. (2017) -- arXiv:1708.04892 
     '''
-    fname = ''.join([UT.dat_dir(), 'lhd/onlyHOD/HOD_LHD.', prior, '.', method, '.', str(samples), 'samples.dat']) 
+    if ndim is None: str_ndim = ''
+    else: str_ndim = str(ndim)+'D.'
+    fname = ''.join([UT.dat_dir(), 'lhd/onlyHOD/', 
+        'HOD_LHD.', str_ndim, prior, '.', method, '.', str(samples), 'samples.dat']) 
     
     if os.path.isfile(fname) and not overwrite: # file exists 
         lhcube = np.loadtxt(fname, skiprows=4)
-        # skip 21st LHD parameter
-        indx = np.ones(lhcube.shape[0], dtype=bool)
-        indx[21] = False
-        lhcube = lhcube[indx,:]
+        if ndim is None: 
+            # skip 21st LHD parameter
+            indx = np.ones(lhcube.shape[0], dtype=bool)
+            indx[21] = False
+            lhcube = lhcube[indx,:]
     else: 
         hodprior = HODprior(prior) 
         hod_range = hodprior.range()
 
-        # Nsample x Ndim latin hypercube
-        lhcube = thetaLHD(hod_range, samples=samples, method=method)
+        if ndim is None: # Nsample x Ndim latin hypercube
+            lhcube = lhd.thetaLHD(hod_range, samples=samples, method=method, ndim=ndim)
+        elif ndim == 1: # only vary alpha 
+            lhcube = np.zeros((samples, len(hod_range[0])))
+            for i in range(4): 
+                lhcube[:,i] = 0.5*(hod_range[0]+hod_range[1])[i]
+            lhc = lhd.thetaLHD([[hod_range[0][4]], [hod_range[1][4]]],
+                    samples=samples, method=method, ndim=ndim)
+            lhcube[:,4] = lhc.flatten()
 
         f = open(fname, 'w') 
         f.write('# '+prior+'\n') 
@@ -144,12 +160,15 @@ def HOD_LHD(prior=None, samples=None, method=None, overwrite=False):
     return lhcube 
 
 
-def testHOD_LHD(prior=None, samples=None, overwrite=False, seed=1):
+def testHOD_LHD(prior=None, samples=None, overwrite=False, ndim=None, seed=1):
     ''' Return parameters of the vanilla Zheng et al.(2007) HOD model 
     for testing the LHD. These values will be significantly more within 
     the boundaries of the parameter space 
     '''
-    fname = ''.join([UT.dat_dir(), 'lhd/onlyHOD/HOD_LHDtest.', prior, '.rseed', str(seed), '.', str(samples), 'samples.dat']) 
+    if ndim is None: str_ndim = ''
+    else: str_ndim = str(ndim)+'D.'
+    fname = ''.join([UT.dat_dir(), 'lhd/onlyHOD/',
+        'HOD_LHDtest.', str_ndim, prior, '.rseed', str(seed), '.', str(samples), 'samples.dat']) 
     
     if os.path.isfile(fname) and not overwrite: # file exists 
         theta_test = np.loadtxt(fname, skiprows=4)
@@ -158,17 +177,31 @@ def testHOD_LHD(prior=None, samples=None, overwrite=False, seed=1):
         hodprior = HODprior(prior) 
         hod_range = hodprior.range()
 
-        theta_test = np.zeros((samples, len(hod_range[0])))
-    
         np.random.seed(seed)
-        for i in range(theta_test.shape[1]):
-            dHOD_range = (hod_range[1] - hod_range[0])[i] 
+
+        theta_test = np.zeros((samples, len(hod_range[0])))
+        if ndim is None: 
+            for i in range(theta_test.shape[1]):
+                dHOD_range = (hod_range[1] - hod_range[0])[i] 
+                # linearly spaced in the inner 50% of the parameter space 
+                ti = np.linspace(hod_range[0][i] + 0.25*dHOD_range, 
+                        hod_range[1][i]-0.25*dHOD_range, 
+                        theta_test.shape[0])
+                np.random.shuffle(ti)
+                theta_test[:,i] = ti
+        elif ndim == 1: 
+            # only alpha varies
+            dHOD_range = (hod_range[1] - hod_range[0])[4] 
             # linearly spaced in the inner 50% of the parameter space 
-            ti = np.linspace(hod_range[0][i] + 0.25*dHOD_range, 
-                    hod_range[1][i]-0.25*dHOD_range, 
+            ti = np.linspace(hod_range[0][4] + 0.25*dHOD_range, 
+                    hod_range[1][4]-0.25*dHOD_range, 
                     theta_test.shape[0])
             np.random.shuffle(ti)
-            theta_test[:,i] = ti
+            theta_test[:,4] = ti
+            theta_test[:,0] = 0.5 * (hod_range[0] + hod_range[1])[0]
+            theta_test[:,1] = 0.5 * (hod_range[0] + hod_range[1])[1]
+            theta_test[:,2] = 0.5 * (hod_range[0] + hod_range[1])[2]
+            theta_test[:,3] = 0.5 * (hod_range[0] + hod_range[1])[3]
 
         f = open(fname, 'w') 
         f.write('# '+prior+'\n') 

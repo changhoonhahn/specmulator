@@ -24,6 +24,14 @@ mpl.rcParams['ytick.major.width'] = 1.5
 mpl.rcParams['legend.frameon'] = False
 
 
+def HODLHD(test=False, ndim=None): 
+    if not test: 
+        onlyHOD.HOD_LHD(prior='sinha2017prior_narrow', method='mdu', samples=40, ndim=ndim) 
+    else: 
+        onlyHOD.testHOD_LHD(prior='sinha2017prior_narrow', samples=20, ndim=ndim) 
+    return None 
+
+
 def check_X_HODLHD(): 
     ''' run specmulator.onlyhod._check_X_HODLHD, which checks which pk files 
     are missing in the LHD
@@ -124,4 +132,4 @@ def X_testHODLHD():
 
 
 if __name__=="__main__": 
-    X_testHODLHD()
+    HODLHD(test=False, ndim=1)

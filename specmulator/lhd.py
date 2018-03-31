@@ -19,7 +19,7 @@ except ModuleNotFoundError:
     pass 
 
 
-def thetaLHD(theta_range, samples=None, method=None):  
+def thetaLHD(theta_range, samples=None, method=None, ndim=None):  
     ''' Given the range of parameters, return a latin hypercube
     of the parameter space based on specified method 
 
@@ -44,10 +44,10 @@ def thetaLHD(theta_range, samples=None, method=None):
     if len(theta_range) != 2: 
         raise ValueError('careful with the dimensions of theta_range input') 
     theta_min, theta_max = theta_range 
-    ndim = len(theta_min) # dimensions of the parameter space 
-    
     # check that the min and max values make sense 
     for idim in range(ndim): assert theta_min[idim] < theta_max[idim]
+
+    if ndim is None: ndim = len(theta_min) # dimensions of the parameter space 
     
     # Nsample x Ndim latin hypercube
     lhcube = LHD(ndim, samples=samples, method=method) 
